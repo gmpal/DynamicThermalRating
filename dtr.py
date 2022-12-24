@@ -79,7 +79,7 @@ class DTR():
             #TODO: implement the non-sliding window version
             pass    
 
-    def parameter_based_transfer(self, source_sensor_id, target_sensor_id, inputs, output, target_num_available_days = 5, target_num_test_days=30, regressor = None, sliding_window = False, metric = mean_squared_error, verbose = 1, epochs = 100):        
+    def parameter_based_transfer(self, source_sensor_id, target_sensor_id, inputs, output, target_num_available_days = 5, target_num_test_days=30, regressor = None, sliding_window = False, metric = mean_squared_error, verbose = 1, epochs_src = 100, epochs_trg = 100, batch_size_src = 32, batch_size_trg = 32):        
         source = self.data.loc[self.data.id == source_sensor_id]
         target = self.data.loc[self.data.id == target_sensor_id]
 
@@ -118,10 +118,10 @@ class DTR():
                 # X_test = scaler.transform(X_test)
 
                 src_model = RegularTransferNN(loss="mse", random_state=self.random_state, verbose=verbose)
-                src_model.fit(Xs, ys, epochs=epochs, verbose=verbose)
+                src_model.fit(Xs, ys, epochs=epochs_src, verbose=verbose, batch_size=batch_size_src)
                 
                 model = RegularTransferNN(src_model.task_, loss="mse",random_state=self.random_state, verbose=verbose)
-                model.fit(X_t_available, y_t_available, epochs=epochs, verbose=verbose)
+                model.fit(X_t_available, y_t_available, epochs=epochs_trg, verbose=verbose, batch_size=batch_size_trg)
                 
                 results = pd.DataFrame(columns=['day', 'Beats IEEE?', 'Beats baseline?'])
                 # Loop over the test days

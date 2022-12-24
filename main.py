@@ -18,13 +18,13 @@ s1, s2 = dtr.get_furthest_sensors()
 
 # r1 = dtr.instance_based_transfer(s1, s2, inputs, output, target_num_available_days=25, target_num_test_days=30, sliding_window=True, regressor=RandomForestRegressor(n_jobs=-1), estimators_tradaboost=30, verbose=1)
 start = time.time()
-r2 = dtr.parameter_based_transfer(s1, s2, inputs, output, target_num_available_days=25, target_num_test_days=30, sliding_window=True, verbose=1, epochs=15)
+r2 = dtr.parameter_based_transfer(s1, s2, inputs, output, target_num_available_days=25, target_num_test_days=30, sliding_window=True, verbose=1, epochs_src=15, epochs_trg=15, batch_size_src=32, batch_size_trg=32)
 
-r3 = dtr.parameter_based_transfer(s2, s1, inputs, output, target_num_available_days=25, target_num_test_days=30, sliding_window=True, verbose=1, epochs=15)
+r3 = dtr.parameter_based_transfer(s2, s1, inputs, output, target_num_available_days=25, target_num_test_days=30, sliding_window=True, verbose=1, epochs_src=15, epochs_trg=15, batch_size_src=32, batch_size_trg=32)
 
-r4 = dtr.parameter_based_transfer(7, 0, inputs, output, target_num_available_days=25, target_num_test_days=30, sliding_window=True, verbose=1, epochs=15)
+r4 = dtr.parameter_based_transfer(7, 0, inputs, output, target_num_available_days=25, target_num_test_days=30, sliding_window=True, verbose=1, epochs_src=15, epochs_trg=15, batch_size_src=32, batch_size_trg=32)
 
-r5 = dtr.parameter_based_transfer(0, 7, inputs, output, target_num_available_days=25, target_num_test_days=30, sliding_window=True, verbose=1, epochs=15)
+r5 = dtr.parameter_based_transfer(0, 7, inputs, output, target_num_available_days=25, target_num_test_days=30, sliding_window=True, verbose=1, epochs_src=15, epochs_trg=15, batch_size_src=32, batch_size_trg=32)
 
 
 end = time.time()
