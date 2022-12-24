@@ -1,2 +1,4 @@
 # DynamicThermalRating
 This repository contains experiments on Dynamic Thermal Rating (DTR), a method for real-time monitoring of a transmission line's thermal capacity. Experiments may include simulations, data analyses, and testing of DTR algorithms.
+
+The experiments in this repository are carried out on real data collected from 11 sensor stations installed on high voltage overhead power lines. Each sensor station consists of a weather station and a device for measuring line current. The weather station measures variables such as air temperature, wind speed, wind direction, and sun irradiance, while the line current measurement device measures the actual conductor temperature. The data has a time resolution of 1 minute and was collected over a period of two months, resulting in approximately 86000 samples per sensor. The data cannot be shared for privacy reasons.
