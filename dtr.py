@@ -209,6 +209,7 @@ class DTR():
     def get_furthest_sensors(self):
         #TODO: think of a better way to calculate the furthest sensors 
         average_distances = self.distances_df[['mean_difference', 'std_difference', 'euclidean_distance', 'manhattan_distance', 'cosine_similarity', 'area_difference']].mean(axis=1)
+        print(self.distances_df)
         return self.distances_df.loc[average_distances.idxmax()][['sensor1', 'sensor2']]
 
     def get_distances(self):

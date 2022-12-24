@@ -22,6 +22,11 @@ r2 = dtr.parameter_based_transfer(s1, s2, inputs, output, target_num_available_d
 
 r3 = dtr.parameter_based_transfer(s2, s1, inputs, output, target_num_available_days=25, target_num_test_days=30, sliding_window=True, verbose=1, epochs=15)
 
+r4 = dtr.parameter_based_transfer(7, 0, inputs, output, target_num_available_days=25, target_num_test_days=30, sliding_window=True, verbose=1, epochs=15)
+
+r5 = dtr.parameter_based_transfer(0, 7, inputs, output, target_num_available_days=25, target_num_test_days=30, sliding_window=True, verbose=1, epochs=15)
+
+
 end = time.time()
 roundend = round(end - start, 2)
 print(roundend)
@@ -29,3 +34,5 @@ print(roundend)
 # print(r1)
 print(r2)
 print(r3)
+print(r4)
+print(r5)
