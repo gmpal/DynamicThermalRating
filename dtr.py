@@ -21,7 +21,7 @@ class DTR():
             self.n_jobs = n_jobs
             self.random_state = random_state
 
-    def instance_based_transfer(self, source_sensor_id, target_sensor_id, inputs, output, target_num_available_days = 5, target_num_test_days=30, regressor = None, sliding_window = False, metric = mean_squared_error, estimators_tradaboost = 20, verbose = 1):        
+    def instance_based_transfer(self, source_sensor_id, target_sensor_id, inputs, output, target_num_available_days = 5, target_num_test_days=30, regressor = None, sliding_window = False, metric = mean_squared_error, estimators_tradaboost = 20, verbose = 1, ieee = True):     
         source = self.data.loc[self.data.id == source_sensor_id]
         target = self.data.loc[self.data.id == target_sensor_id]
         
@@ -37,7 +37,7 @@ class DTR():
         ys = source[output] #source output
         X_test = target_test[inputs] #target inputs
         y_test = target_test[output] #target output
-        y_IEEE_738 = target_test['Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C]']
+        if ieee: y_IEEE_738 = target_test['Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C]']
 
         # Get the unique dates in the target data
         dates = target['datetime'].dt.date.unique()
@@ -53,24 +53,32 @@ class DTR():
 
                 regressor_source = clone(regressor)
                 regressor_mix = clone(regressor)
+                regressor_target = clone(regressor)
+
                 model = TrAdaBoostR2(regressor, n_estimators=estimators_tradaboost, random_state=self.random_state, verbose=verbose)
                 model.fit(Xs, ys, X_t_available, y_t_available)
                 
                 
                 regressor_source.fit(Xs, ys)
                 regressor_mix.fit(pd.concat([Xs,X_t_available]), pd.concat([ys,y_t_available]))
-                results = pd.DataFrame(columns=['day', 'Beats IEEE?', 'Beats baseline?', 'Beats mix?'])
+                regressor_target.fit(X_t_available, y_t_available)
+
+                results = pd.DataFrame(columns=['day', 'Transfer', 'IEEE', 'Source', 'Target', 'Mix'])
                 # Loop over the test days
                 for day in testing_days:
                     # Extract test data for the current day
                     target_test = target.loc[target['datetime'].dt.date == day]
                     X_test = target_test[inputs]
                     y_test = target_test[output]
-                    y_hat_trAdaBoost = model.predict(X_test)
-                    y_hat_baseline = regressor_source.predict(X_test)
+                    y_hat_transfer = model.predict(X_test)
+                    y_hat_source = regressor_source.predict(X_test)
                     y_hat_mix = regressor_mix.predict(X_test)
-                    y_IEEE_738 = target_test['Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C]']
-                    results.loc[len(results)] = [day, mean_squared_error(y_test, y_hat_trAdaBoost) < mean_squared_error(y_test, y_IEEE_738), mean_squared_error(y_test, y_hat_trAdaBoost) < mean_squared_error(y_test, y_hat_baseline), mean_squared_error(y_test, y_hat_trAdaBoost) < mean_squared_error(y_test, y_hat_mix)]
+                    y_hat_target = regressor_target.predict(X_test)
+                    if ieee: 
+                        y_IEEE_738 = target_test['Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C]']
+                        results.loc[len(results)] = [day, metric(y_test, y_hat_transfer),  metric(y_test, y_IEEE_738), metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
+                    else:
+                        results.loc[len(results)] = [day, metric(y_test, y_hat_transfer),  None, metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
                 
                 return results
                 break
@@ -79,7 +87,7 @@ class DTR():
             #TODO: implement the non-sliding window version
             pass    
 
-    def parameter_based_transfer(self, source_sensor_id, target_sensor_id, inputs, output, target_num_available_days = 5, target_num_test_days=30, regressor = None, sliding_window = False, metric = mean_squared_error, verbose = 1, epochs_src = 100, epochs_trg = 100, batch_size_src = 32, batch_size_trg = 32):        
+    def parameter_based_transfer(self, source_sensor_id, target_sensor_id, inputs, output, target_num_available_days = 5, target_num_test_days=30, regressor = None, sliding_window = False, metric = mean_squared_error, verbose = 1, epochs_src = 100, epochs_trg = 100, batch_size_src = 32, batch_size_trg = 32, ieee=False):        
         source = self.data.loc[self.data.id == source_sensor_id]
         target = self.data.loc[self.data.id == target_sensor_id]
 
@@ -97,7 +105,8 @@ class DTR():
         ys = source[output] #source output
         X_test = target_test[inputs] #target inputs
         y_test = target_test[output] #target output
-        y_IEEE_738 = target_test['Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C]']
+        if ieee:
+            y_IEEE_738 = target_test['Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C]']
 
         # Get the unique dates in the target data
         dates = target['datetime'].dt.date.unique()
@@ -122,8 +131,14 @@ class DTR():
                 
                 model = RegularTransferNN(src_model.task_, loss="mse",random_state=self.random_state, verbose=verbose)
                 model.fit(X_t_available, y_t_available, epochs=epochs_trg, verbose=verbose, batch_size=batch_size_trg)
+
+                tgt_only_model = RegularTransferNN(loss="mse",random_state=self.random_state, verbose=verbose)
+                tgt_only_model.fit(X_t_available, y_t_available, epochs=epochs_trg, verbose=verbose, batch_size=batch_size_trg)
                 
-                results = pd.DataFrame(columns=['day', 'Beats IEEE?', 'Beats baseline?'])
+                tgt_source_model = RegularTransferNN(loss="mse",random_state=self.random_state, verbose=verbose)
+                tgt_source_model.fit(pd.concat([X_t_available,Xs]), pd.concat([y_t_available, ys]), epochs=epochs_trg, verbose=verbose, batch_size=batch_size_trg)
+
+                results = pd.DataFrame(columns=['day', 'Transfer', 'IEEE', 'Source', 'Target', 'Mix'])
                 # Loop over the test days
                 for day in testing_days:
                     # Extract test data for the current day
@@ -131,12 +146,16 @@ class DTR():
                     X_test = target_test[inputs]
                     y_test = target_test[output]
                     y_hat_transfer = model.predict(X_test)
-                    y_hat_baseline = src_model.predict(X_test)
-                    y_IEEE_738 = target_test['Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C]']
-                    results.loc[len(results)] = [day, mean_squared_error(y_test, y_hat_transfer) < mean_squared_error(y_test, y_IEEE_738), mean_squared_error(y_test, y_hat_transfer) < mean_squared_error(y_test, y_hat_baseline)]
+                    y_hat_source = src_model.predict(X_test)
+                    y_hat_target = tgt_only_model.predict(X_test)
+                    y_hat_mix = tgt_source_model.predict(X_test)
+                    if ieee:
+                        y_IEEE_738 = target_test['Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C]']
+                        results.loc[len(results)] = [day, metric(y_test, y_hat_transfer),  metric(y_test, y_IEEE_738), metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
+                    else:
+                        results.loc[len(results)] = [day, metric(y_test, y_hat_transfer),  None, metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
                 
                 return results
-                break
 
         else:
             #TODO: implement the non-sliding window version
@@ -209,7 +228,6 @@ class DTR():
     def get_furthest_sensors(self):
         #TODO: think of a better way to calculate the furthest sensors 
         average_distances = self.distances_df[['mean_difference', 'std_difference', 'euclidean_distance', 'manhattan_distance', 'cosine_similarity', 'area_difference']].mean(axis=1)
-        print(self.distances_df)
         return self.distances_df.loc[average_distances.idxmax()][['sensor1', 'sensor2']]
 
     def get_distances(self):
