@@ -7,159 +7,197 @@ from sklearn.metrics import mean_squared_error
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
 
+from keras.models import clone_model
+
 from adapt.instance_based import * 
 from adapt.parameter_based import *
-from sklearn.base import clone
+
+from sklearn.base import clone, BaseEstimator
 
 
 class DTR():
 
-    def __init__(self, data, n_jobs=5, random_state=42):
+    def __init__(self, data, inputs, output, n_jobs=5, random_state=42):
             
             self.data = data
+            self.inputs = inputs 
+            self.output = output
             self.distances_df = None
             self.n_jobs = n_jobs
             self.random_state = random_state
 
-    def instance_based_transfer(self, source_sensor_id, target_sensor_id, inputs, output, target_num_available_days = 5, target_num_test_days=30, regressor = None, sliding_window = False, metric = mean_squared_error, estimators_tradaboost = 20, verbose = 1, ieee = True):     
+    def _prepare_data(self, source_sensor_id, target_sensor_id, target_num_available_days, target_num_test_days):
         source = self.data.loc[self.data.id == source_sensor_id]
+        # remove the last target_num_test_days from source data
+        source = source.loc[~source['datetime'].dt.date.isin(source['datetime'].dt.date.unique()[-target_num_test_days:])]
+
         target = self.data.loc[self.data.id == target_sensor_id]
         
-        days_in_target = target['datetime'].dt.date.nunique()
-        if days_in_target < (target_num_available_days + target_num_test_days):
+        if target['datetime'].dt.date.nunique() < (target_num_available_days + target_num_test_days):
             raise ValueError("The target sensor does not have enough data to perform the experiment with the specified parameters.")
 
         testing_days = target['datetime'].dt.date.unique()[-target_num_test_days:] 
-        target_test = target.loc[target['datetime'].dt.date.between(testing_days[0], testing_days[-1])]
-
-
-        Xs = source[inputs] #source inputs
-        ys = source[output] #source output
-        X_test = target_test[inputs] #target inputs
-        y_test = target_test[output] #target output
-        if ieee: y_IEEE_738 = target_test['Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C]']
+        Xs = source[self.inputs] #source inputs
+        ys = source[self.output] #source output
 
         # Get the unique dates in the target data
         dates = target['datetime'].dt.date.unique()
-        
-        if sliding_window:
-            # Loop through the dates, extracting available data in a sliding window fashion
-            for i in range(len(dates) - target_num_test_days - target_num_available_days + 1):
-                # Extract available data for the target sensor
-                available_days = dates[i:i+target_num_available_days]
-                target_available = target.loc[target['datetime'].dt.date.between(available_days[0], available_days[-1])]
-                X_t_available = target_available[inputs]
-                y_t_available = target_available[output]
+        return target,testing_days,Xs,ys,dates
 
-                regressor_source = clone(regressor)
-                regressor_mix = clone(regressor)
-                regressor_target = clone(regressor)
 
-                model = TrAdaBoostR2(regressor, n_estimators=estimators_tradaboost, random_state=self.random_state, verbose=verbose)
-                model.fit(Xs, ys, X_t_available, y_t_available)
-                
-                
-                regressor_source.fit(Xs, ys)
-                regressor_mix.fit(pd.concat([Xs,X_t_available]), pd.concat([ys,y_t_available]))
-                regressor_target.fit(X_t_available, y_t_available)
-
-                results = pd.DataFrame(columns=['day', 'Transfer', 'IEEE', 'Source', 'Target', 'Mix'])
-                # Loop over the test days
-                for day in testing_days:
-                    # Extract test data for the current day
-                    target_test = target.loc[target['datetime'].dt.date == day]
-                    X_test = target_test[inputs]
-                    y_test = target_test[output]
-                    y_hat_transfer = model.predict(X_test)
-                    y_hat_source = regressor_source.predict(X_test)
-                    y_hat_mix = regressor_mix.predict(X_test)
-                    y_hat_target = regressor_target.predict(X_test)
-                    if ieee: 
-                        y_IEEE_738 = target_test['Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C]']
-                        results.loc[len(results)] = [day, metric(y_test, y_hat_transfer),  metric(y_test, y_IEEE_738), metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
-                    else:
-                        results.loc[len(results)] = [day, metric(y_test, y_hat_transfer),  None, metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
-                
-                return results
-                break
-
+    def _clone(self, regressor):
+        # if scikit learn regressor 
+        if isinstance(regressor, BaseEstimator):
+            regressor_source = clone(regressor)
+            regressor_mix = clone(regressor)
+            regressor_target = clone(regressor)
+        # if keras regressor
         else:
-            #TODO: implement the non-sliding window version
-            pass    
+            regressor_source = clone_model(regressor)
+            regressor_mix = clone_model(regressor)
+            regressor_target = clone_model(regressor)
 
-    def parameter_based_transfer(self, source_sensor_id, target_sensor_id, inputs, output, target_num_available_days = 5, target_num_test_days=30, regressor = None, sliding_window = False, metric = mean_squared_error, verbose = 1, epochs_src = 100, epochs_trg = 100, batch_size_src = 32, batch_size_trg = 32, ieee=False):        
-        source = self.data.loc[self.data.id == source_sensor_id]
-        target = self.data.loc[self.data.id == target_sensor_id]
+            regressor_source.compile(loss='mse')
+            regressor_mix.compile(loss='mse')
+            regressor_target.compile(loss='mse')
 
+        return regressor_source, regressor_target, regressor_mix
 
-        
-        days_in_target = target['datetime'].dt.date.nunique()
-        if days_in_target < (target_num_available_days + target_num_test_days):
-            raise ValueError("The target sensor does not have enough data to perform the experiment with the specified parameters.")
+    def _test(self, metric, ieee, target, testing_days, regressor_source, regressor_mix, regressor_target, regressor_transfer, verbose):
 
-        testing_days = target['datetime'].dt.date.unique()[-target_num_test_days:] 
-        target_test = target.loc[target['datetime'].dt.date.between(testing_days[0], testing_days[-1])]
+        results = pd.DataFrame(columns=['Testing Day', 'Transfer MSE', 'IEEE MSE', 'Source Only MSE', 'Target Only MSE', 'Source + Target (No Transfer) MSE'])
 
-
-        Xs = source[inputs] #source inputs
-        ys = source[output] #source output
-        X_test = target_test[inputs] #target inputs
-        y_test = target_test[output] #target output
-        if ieee:
-            y_IEEE_738 = target_test['Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C]']
-
-        # Get the unique dates in the target data
-        dates = target['datetime'].dt.date.unique()
-        
-        if sliding_window:
-            # Loop through the dates, extracting available data in a sliding window fashion
-            for i in range(len(dates) - target_num_test_days - target_num_available_days + 1):
-                # Extract available data for the target sensor
-                available_days = dates[i:i+target_num_available_days]
-                target_available = target.loc[target['datetime'].dt.date.between(available_days[0], available_days[-1])]
-                X_t_available = target_available[inputs]
-                y_t_available = target_available[output]
-                
-                # scaler = StandardScaler()
-                
-                # Xs = scaler.fit_transform(Xs)
-                # X_t_available = scaler.transform(X_t_available)
-                # X_test = scaler.transform(X_test)
-
-                src_model = RegularTransferNN(loss="mse", random_state=self.random_state, verbose=verbose)
-                src_model.fit(Xs, ys, epochs=epochs_src, verbose=verbose, batch_size=batch_size_src)
-                
-                model = RegularTransferNN(src_model.task_, loss="mse",random_state=self.random_state, verbose=verbose)
-                model.fit(X_t_available, y_t_available, epochs=epochs_trg, verbose=verbose, batch_size=batch_size_trg)
-
-                tgt_only_model = RegularTransferNN(loss="mse",random_state=self.random_state, verbose=verbose)
-                tgt_only_model.fit(X_t_available, y_t_available, epochs=epochs_trg, verbose=verbose, batch_size=batch_size_trg)
-                
-                tgt_source_model = RegularTransferNN(loss="mse",random_state=self.random_state, verbose=verbose)
-                tgt_source_model.fit(pd.concat([X_t_available,Xs]), pd.concat([y_t_available, ys]), epochs=epochs_trg, verbose=verbose, batch_size=batch_size_trg)
-
-                results = pd.DataFrame(columns=['day', 'Transfer', 'IEEE', 'Source', 'Target', 'Mix'])
-                # Loop over the test days
-                for day in testing_days:
+        for day in testing_days:
+            
                     # Extract test data for the current day
-                    target_test = target.loc[target['datetime'].dt.date == day]
-                    X_test = target_test[inputs]
-                    y_test = target_test[output]
-                    y_hat_transfer = model.predict(X_test)
-                    y_hat_source = src_model.predict(X_test)
-                    y_hat_target = tgt_only_model.predict(X_test)
-                    y_hat_mix = tgt_source_model.predict(X_test)
-                    if ieee:
-                        y_IEEE_738 = target_test['Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C]']
-                        results.loc[len(results)] = [day, metric(y_test, y_hat_transfer),  metric(y_test, y_IEEE_738), metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
-                    else:
-                        results.loc[len(results)] = [day, metric(y_test, y_hat_transfer),  None, metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
-                
-                return results
+            target_test = target.loc[target['datetime'].dt.date == day]
+            X_test = target_test[self.inputs]
+            y_test = target_test[self.output]
+            y_hat_transfer = regressor_transfer.predict(X_test, verbose=verbose)
+            y_hat_source = regressor_source.predict(X_test, verbose=verbose)
+            y_hat_mix = regressor_mix.predict(X_test, verbose=verbose)
+            y_hat_target = regressor_target.predict(X_test, verbose=verbose)
+            if ieee: 
+                y_IEEE_738 = target_test['Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C]']
+                results.loc[len(results)] = [day, metric(y_test, y_hat_transfer),  metric(y_test, y_IEEE_738), metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
+            else:
+                results.loc[len(results)] = [day, metric(y_test, y_hat_transfer),  None, metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
 
+        return results
+
+    def _both_transfers(self, regressor, metric, estimators_tradaboost, verbose, ieee, epochs, batch_size, target, testing_days, Xs, ys, available_days):
+
+        target_available = target.loc[target['datetime'].dt.date.between(available_days[0], available_days[-1])]
+
+        X_t_available = target_available[self.inputs]
+        y_t_available = target_available[self.output]
+                
+        _, regressor_target, regressor_mix = self._clone(regressor)
+
+        regressor_source = RegularTransferNN(loss="mse", lambdas=0.0, random_state=self.random_state, verbose=verbose)
+        regressor_source.fit(Xs, ys, epochs=epochs, verbose=verbose, batch_size=batch_size)
+
+        regressor_transfer_p = RegularTransferNN(regressor_source.task_, loss="mse", lambdas=1.0, random_state=self.random_state, verbose=verbose)
+        regressor_transfer_p.fit(X_t_available, y_t_available, epochs=epochs, verbose=verbose, batch_size=batch_size)
+
+        regressor_transfer_i = TrAdaBoostR2(regressor, n_estimators=estimators_tradaboost, random_state=self.random_state, verbose=verbose)
+        regressor_transfer_i.fit(Xs, ys, X_t_available, y_t_available, epochs=epochs, batch_size=batch_size, verbose=verbose)
+
+        regressor_target.fit(X_t_available, y_t_available, epochs=epochs, verbose=verbose, batch_size=batch_size)
+        regressor_mix.fit(pd.concat([X_t_available,Xs]), pd.concat([y_t_available, ys]), epochs=epochs, verbose=verbose, batch_size=batch_size)
+
+        #TODO: refactor
+        results = pd.DataFrame(columns=['Testing Day', 'Parameter-based Transfer MSE', 'Instance-based Transfer MSE', 'IEEE738 MSE', 'Source Only MSE', 'Target Only MSE', 'Source + Target (No Transfer) MSE'])
+
+        for day in testing_days:
+            # Extract test data for the current day
+            target_test = target.loc[target['datetime'].dt.date == day]
+            X_test = target_test[self.inputs]
+            y_test = target_test[self.output]
+            y_hat_transfer_p = regressor_transfer_p.predict(X_test)
+            y_hat_transfer_i = regressor_transfer_i.predict(X_test)
+            y_hat_source = regressor_source.predict(X_test)
+            y_hat_mix = regressor_mix.predict(X_test)
+            y_hat_target = regressor_target.predict(X_test)
+            if ieee: 
+                y_IEEE_738 = target_test['Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C]']
+                results.loc[len(results)] = [day, metric(y_test, y_hat_transfer_p), metric(y_test, y_hat_transfer_i),  metric(y_test, y_IEEE_738), metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
+            else:
+                results.loc[len(results)] = [day, metric(y_test, y_hat_transfer_p), metric(y_test, y_hat_transfer_i),  None, metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
+
+        return results
+
+
+    def _p_transfer(self, regressor, metric, verbose, epochs, batch_size, ieee, target, testing_days, Xs, ys, available_days):
+        
+        target_available = target.loc[target['datetime'].dt.date.between(available_days[0], available_days[-1])]
+
+        X_t_available = target_available[self.inputs]
+        y_t_available = target_available[self.output]
+                
+        _, regressor_target, regressor_mix = self._clone(regressor)
+
+        regressor_source = RegularTransferNN(loss="mse", lambdas=0.0, random_state=self.random_state, verbose=verbose)
+        regressor_source.fit(Xs, ys, epochs=epochs, verbose=verbose, batch_size=batch_size)
+
+        regressor_transfer = RegularTransferNN(regressor_source.task_, loss="mse", lambdas=1.0, random_state=self.random_state, verbose=verbose)
+        regressor_transfer.fit(X_t_available, y_t_available, epochs=epochs, verbose=verbose, batch_size=batch_size)
+
+        regressor_target.fit(X_t_available, y_t_available, epochs=epochs, verbose=verbose, batch_size=batch_size)
+        regressor_mix.fit(pd.concat([X_t_available,Xs]), pd.concat([y_t_available, ys]), epochs=epochs, verbose=verbose, batch_size=batch_size)
+
+        results = self._test(metric, ieee, target, testing_days, regressor_source, regressor_mix, regressor_target, regressor_transfer, verbose)
+        return results
+
+    def _i_transfer(self, regressor, metric, estimators_tradaboost, verbose, ieee, epochs, batch_size, target, testing_days, Xs, ys, available_days):
+        target_available = target.loc[target['datetime'].dt.date.between(available_days[0], available_days[-1])]
+        X_t_available = target_available[self.inputs]
+        y_t_available = target_available[self.output]
+
+        regressor_source, regressor_target, regressor_mix = self._clone(regressor)
+
+        regressor_transfer = TrAdaBoostR2(regressor, n_estimators=estimators_tradaboost, random_state=self.random_state, verbose=verbose)
+        regressor_transfer.fit(Xs, ys, X_t_available, y_t_available, epochs=epochs, batch_size=batch_size, verbose=verbose)
+
+        regressor_source.fit(Xs, ys, epochs=epochs, batch_size=batch_size, verbose=verbose)
+        regressor_mix.fit(pd.concat([Xs,X_t_available]), pd.concat([ys,y_t_available]), epochs=epochs, batch_size=batch_size, verbose=verbose)
+        regressor_target.fit(X_t_available, y_t_available, epochs=epochs, batch_size=batch_size, verbose=verbose)
+            
+            # Loop over the test days
+        results = self._test(metric, ieee, target, testing_days, regressor_source, regressor_mix, regressor_target, regressor_transfer, verbose)
+        return results
+
+    def _perform_transfer(self, regressor, metric, verbose, epochs, batch_size, ieee, method, estimators_tradaboost, target, testing_days, Xs, ys, available_days):
+        if method == 'parameter_based_transfer':
+            results = self._p_transfer(regressor, metric, verbose, epochs, batch_size, ieee, target, testing_days, Xs, ys, available_days)
+        elif method == 'instance_based_transfer':
+            results = self._i_transfer(regressor, metric, estimators_tradaboost, verbose, ieee, epochs, batch_size, target, testing_days, Xs, ys, available_days)
+        elif method == 'both':
+            results = self._both_transfers(regressor, metric, estimators_tradaboost, verbose, ieee, epochs, batch_size, target, testing_days, Xs, ys, available_days)
+        else: 
+            raise ValueError('method must be either parameter_based_transfer or instance_based_transfer')
+        return results
+
+
+    def transfer(self, source_sensor_id, target_sensor_id, target_num_available_days = 5, target_num_test_days=30, regressor=None, sliding_window = False, metric = mean_squared_error, verbose = 1, epochs = 15,  batch_size = 32, ieee=False, method = 'parameter_based_transfer', estimators_tradaboost = 20):        
+        target, testing_days, Xs, ys, dates = self._prepare_data(source_sensor_id, target_sensor_id, target_num_available_days, target_num_test_days)
+        if sliding_window:
+            sliding_window_results = []
+            for i in range(len(dates) - target_num_test_days - target_num_available_days + 1): # Loop through the dates, extracting available data in a sliding window fashion
+                available_days = dates[i:i+target_num_available_days] # Extract available data for the target sensor
+                results = self._perform_transfer(regressor, metric, verbose, epochs, batch_size, ieee, method, estimators_tradaboost, target, testing_days, Xs, ys, available_days)
+                sliding_window_results.append(results)
+            return pd.concat(sliding_window_results).groupby('Testing Day').mean() # Return the average of the results
         else:
-            #TODO: implement the non-sliding window version
-            pass   
+            start = np.random.randint(0, len(dates) - target_num_test_days - target_num_available_days + 1) #select randomly one of the possible windows of available data of size target_num_available_days
+            available_days = dates[start:start+target_num_available_days] # Extract available data for the target sensor
+            results = self._perform_transfer(regressor, metric, verbose, epochs, batch_size, ieee, method, estimators_tradaboost, target, testing_days, Xs, ys, available_days)
+            return results
+
+ 
+ 
+            
+
 
 
         
