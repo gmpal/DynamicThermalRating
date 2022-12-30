@@ -82,8 +82,10 @@ class DTR():
                 results.loc[len(results)] = [day, metric(y_test, y_hat_transfer),  metric(y_test, y_IEEE_738), metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
             else:
                 results.loc[len(results)] = [day, metric(y_test, y_hat_transfer),  None, metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
-
-        return results
+        if ieee:
+            return results
+        else:
+            return results.drop(columns=['IEEE MSE'])
 
     def _both_transfers(self, regressor, metric, estimators_tradaboost, verbose, ieee, epochs, batch_size, target, testing_days, Xs, ys, available_days):
 
@@ -125,7 +127,10 @@ class DTR():
             else:
                 results.loc[len(results)] = [day, metric(y_test, y_hat_transfer_p), metric(y_test, y_hat_transfer_i),  None, metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
 
-        return results
+        if ieee:
+            return results
+        else:
+            return results.drop(columns=['IEEE MSE'])
 
 
     def _p_transfer(self, regressor, metric, verbose, epochs, batch_size, ieee, target, testing_days, Xs, ys, available_days):

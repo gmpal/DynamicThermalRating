@@ -10,7 +10,8 @@ from keras.models import Model
 
 
 
-data = pd.read_csv('./small_data_0.2.zip',index_col=0, infer_datetime_format=True, parse_dates=['datetime'])
+data = pd.read_csv('./artificial_data.csv',index_col=0, infer_datetime_format=True, parse_dates=['datetime'])
+# data = data.sample(frac=0.3, random_state=42)
 inputs = ['Wind Speed [m/s]', 'Arranged Wind Dir [°]', 'Air temp [°C]', 'Humidity [%]', 'Sun irradiance thermal flow absorbed by the conductor.[W/m]', 'Current flow [A]']
 output = ['Actual Conductor Temp (t+1) [°C]']
 
@@ -42,10 +43,10 @@ r2 = dtr.transfer(  source_sensor_id = s1,
                     regressor=model, 
                     sliding_window = False, 
                     verbose = 1, 
-                    epochs = 15,  
-                    batch_size = 32, 
-                    ieee=True, 
-                    estimators_tradaboost = 20)     
+                    epochs = 5,  
+                    batch_size = 500, 
+                    ieee=False, 
+                    estimators_tradaboost = 5)     
 
 
 r3 = dtr.transfer(  source_sensor_id = s2, 
@@ -56,10 +57,10 @@ r3 = dtr.transfer(  source_sensor_id = s2,
                     regressor=model, 
                     sliding_window = False, 
                     verbose = 1, 
-                    epochs = 15,  
-                    batch_size = 32, 
-                    ieee=True, 
-                    estimators_tradaboost = 20)     
+                    epochs = 5,  
+                    batch_size = 500, 
+                    ieee=False, 
+                    estimators_tradaboost = 5)     
 
 
 r2.to_csv('r2.csv', index=False)

@@ -58,15 +58,16 @@ def create_synthetic_data():
             'Current flow [A]': current_flow,
         })
 
-        conductor_temp =  air_temp ** sensor + wind_speed * wind_dir * humidity + irradiance + current_flow #+ np.random.normal(loc=0, scale=0.1, size=num_rows)
+        conductor_temp =  irradiance * air_temp / current_flow * 0.00001 
         # data_random_sensor['Actual Conductor Temp (t+1) [°C]'] = np.tanh(conductor_temp)
-        data_random_sensor['Actual Conductor Temp (t+1) [°C]'] = conductor_temp
+        data_random_sensor['Actual Conductor Temp (t+1) [°C]'] = conductor_temp 
 
         # Scale the resulting column to have the same range as the Air temp [°C] column
         min_air_temp = data_random_sensor['Air temp [°C]'].min()
         max_air_temp = data_random_sensor['Air temp [°C]'].max()
         data_random_sensor['Actual Conductor Temp (t+1) [°C]'] = data_random_sensor['Actual Conductor Temp (t+1) [°C]'] * (max_air_temp - min_air_temp) + min_air_temp
 
+        data_random_sensor['Actual Conductor Temp (t+1) [°C]'] += np.random.normal(loc=sensor, scale=1, size=num_rows)
         data_random_sensor['id'] = sensor
         data_random_sensor['datetime'] = pd.date_range(start='01/01/2022', periods=num_rows, freq='1min')
 
@@ -94,16 +95,23 @@ def assess_synthetic_data(sensor_id, num_days, regressor = None, inputs = None, 
         # calculate the mean squared error
         mse.append(mean_squared_error(data_sensor_test_day[output], y_hat))
 
-    print(f'Mean squared error: {mse}')
+        #create dataframe with the mse for each day
+    mse_df = pd.DataFrame({'datetime': data_sensor_test.datetime.dt.date.unique(), 'mse': mse})
+
+
+    print(mse_df)
 
 
 
 
 if __name__ == '__main__':
+    #set numpy random seed
+    np.random.seed(42)
+    
     create_synthetic_data()
     inputs = ['Wind Speed [m/s]', 'Arranged Wind Dir [°]', 'Air temp [°C]', 'Humidity [%]', 'Sun irradiance thermal flow absorbed by the conductor.[W/m]', 'Current flow [A]']
     output = ['Actual Conductor Temp (t+1) [°C]']
     regressor = RandomForestRegressor(n_jobs=-1)
-    assess_synthetic_data(7, 5, regressor, inputs, output)
+    assess_synthetic_data(10, 5, regressor, inputs, output)
 
 
