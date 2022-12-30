@@ -27,7 +27,7 @@ def create_synthetic_data():
     for sensor in data.id.unique():
         data_sensor = data.loc[data.id == sensor]
 
-        num_rows = 2 * 30 * 24 * 60
+        num_rows = 15 * 24 * 60 # 15 days of data
         
         wind_speed_mean = data_sensor['Wind Speed [m/s]'].mean()
         wind_speed_std = data_sensor['Wind Speed [m/s]'].std()

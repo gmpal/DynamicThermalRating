@@ -80,7 +80,7 @@ class DTR():
         self.predictions['Target Only'] = {}
         self.predictions['Source + Target (No Transfer)'] = {}
         self.predictions['Real Temperature'] = {}
-        if ieee: self.predictions['IEEE MSE'] = {}
+        if ieee: self.predictions['IEEE'] = {}
 
         for day in testing_days:
             
@@ -88,10 +88,10 @@ class DTR():
             target_test = target.loc[target['datetime'].dt.date == day]
             X_test = target_test[self.inputs]
             y_test = target_test[self.output]
-            y_hat_transfer = regressor_transfer.predict(X_test, verbose=verbose)
-            y_hat_source = regressor_source.predict(X_test, verbose=verbose)
-            y_hat_mix = regressor_mix.predict(X_test, verbose=verbose)
-            y_hat_target = regressor_target.predict(X_test, verbose=verbose)
+            y_hat_transfer = regressor_transfer.predict(X_test)
+            y_hat_source = regressor_source.predict(X_test)
+            y_hat_mix = regressor_mix.predict(X_test)
+            y_hat_target = regressor_target.predict(X_test)
 
             if store_predictions:
                 self.predictions['Transfer'][day] = y_hat_transfer
@@ -103,14 +103,14 @@ class DTR():
             if ieee: 
                 y_IEEE_738 = target_test['Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C]']
                 if store_predictions: 
-                    self.predictions['IEEE MSE'][day] = y_IEEE_738.reset_index(drop=True)
+                    self.predictions['IEEE'][day] = y_IEEE_738.reset_index(drop=True)
                 results.loc[len(results)] = [day, metric(y_test, y_hat_transfer),  metric(y_test, y_IEEE_738), metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
             else:
                 results.loc[len(results)] = [day, metric(y_test, y_hat_transfer),  None, metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
         if ieee:
             return results
         else:
-            return results.drop(columns=['IEEE MSE'])
+            return results.drop(columns=['IEEE738 MSE'])
 
     def _both_transfers(self, regressor, metric, estimators_tradaboost, verbose, ieee, epochs, batch_size, target, testing_days, Xs, ys, available_days, store_predictions):
 
@@ -142,7 +142,7 @@ class DTR():
         self.predictions['Target Only'] = {}
         self.predictions['Source + Target (No Transfer)'] = {}
         self.predictions['Real Temperature'] = {}
-        if ieee: self.predictions['IEEE MSE'] = {}
+        if ieee: self.predictions['IEEE'] = {}
 
         for day in testing_days:
             # Extract test data for the current day
@@ -165,7 +165,7 @@ class DTR():
                 self.predictions['Real Temperature'][day] = y_test.reset_index(drop=True)
             if ieee: 
                 y_IEEE_738 = target_test['Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C]']
-                if store_predictions: self.predictions['IEEE MSE'][day] = y_IEEE_738.reset_index(drop=True)
+                if store_predictions: self.predictions['IEEE'][day] = y_IEEE_738.reset_index(drop=True)
                 results.loc[len(results)] = [day, metric(y_test, y_hat_transfer_p), metric(y_test, y_hat_transfer_i),  metric(y_test, y_IEEE_738), metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
             else:
                 results.loc[len(results)] = [day, metric(y_test, y_hat_transfer_p), metric(y_test, y_hat_transfer_i),  None, metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
@@ -173,7 +173,7 @@ class DTR():
         if ieee:
             return results
         else:
-            return results.drop(columns=['IEEE MSE'])
+            return results.drop(columns=['IEEE738 MSE'])
 
 
     def _p_transfer(self, regressor, metric, verbose, epochs, batch_size, ieee, target, testing_days, Xs, ys, available_days, store_predictions):
@@ -205,12 +205,17 @@ class DTR():
         regressor_source, regressor_target, regressor_mix = self._clone(regressor)
 
         regressor_transfer = TrAdaBoostR2(regressor, n_estimators=estimators_tradaboost, random_state=self.random_state, verbose=verbose)
-        regressor_transfer.fit(Xs, ys, X_t_available, y_t_available, epochs=epochs, batch_size=batch_size, verbose=verbose)
-
-        regressor_source.fit(Xs, ys, epochs=epochs, batch_size=batch_size, verbose=verbose)
-        regressor_mix.fit(pd.concat([Xs,X_t_available]), pd.concat([ys,y_t_available]), epochs=epochs, batch_size=batch_size, verbose=verbose)
-        regressor_target.fit(X_t_available, y_t_available, epochs=epochs, batch_size=batch_size, verbose=verbose)
-            
+        
+        if isinstance(regressor, BaseEstimator):
+            regressor_transfer.fit(Xs, ys, X_t_available, y_t_available)
+            regressor_source.fit(Xs, ys)
+            regressor_mix.fit(pd.concat([Xs,X_t_available]), pd.concat([ys,y_t_available]))
+            regressor_target.fit(X_t_available, y_t_available)
+        else:
+            regressor_transfer.fit(Xs, ys, X_t_available, y_t_available, epochs=epochs, batch_size=batch_size, verbose=verbose)
+            regressor_source.fit(Xs, ys, epochs=epochs, batch_size=batch_size, verbose=verbose)
+            regressor_mix.fit(pd.concat([Xs,X_t_available]), pd.concat([ys,y_t_available]), epochs=epochs, batch_size=batch_size, verbose=verbose)
+            regressor_target.fit(X_t_available, y_t_available, epochs=epochs, batch_size=batch_size, verbose=verbose)
             # Loop over the test days
         results = self._test(metric, ieee, target, testing_days, regressor_source, regressor_mix, regressor_target, regressor_transfer, verbose, store_predictions)
         return results
@@ -223,7 +228,7 @@ class DTR():
         elif method == 'both':
             results = self._both_transfers(regressor, metric, estimators_tradaboost, verbose, ieee, epochs, batch_size, target, testing_days, Xs, ys, available_days, store_predictions)
         else: 
-            raise ValueError('method must be either parameter_based_transfer or instance_based_transfer')
+            raise ValueError("method must be either 'parameter_based_transfer' or 'instance_based_transfer', or 'both'")
         return results
 
 
