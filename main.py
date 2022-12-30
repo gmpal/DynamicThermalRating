@@ -10,7 +10,7 @@ from keras.models import Model
 
 
 
-data = pd.read_csv('./artificial_data.csv',index_col=0, infer_datetime_format=True, parse_dates=['datetime'])
+data = pd.read_csv('./small_data_0.2.zip',index_col=0, infer_datetime_format=True, parse_dates=['datetime'])
 # data = data.sample(frac=0.3, random_state=42)
 inputs = ['Wind Speed [m/s]', 'Arranged Wind Dir [°]', 'Air temp [°C]', 'Humidity [%]', 'Sun irradiance thermal flow absorbed by the conductor.[W/m]', 'Current flow [A]']
 output = ['Actual Conductor Temp (t+1) [°C]']
@@ -31,7 +31,14 @@ dense1 = Dense(units=10)(flatten)
 dense2 = Dense(units=10)(dense1)
 output_layer = Dense(units=len(output))(dense2)
 model = Model(input_layer, output_layer)
-model.compile(loss='mse', optimizer='adam')
+model.compile(loss='mse')
+
+#save model to file
+model.save('model.h5')
+exit()
+
+#load model from file
+#model = load_model('model.h5')
 
 
 
