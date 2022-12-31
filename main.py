@@ -21,7 +21,7 @@ dtr.transfer(source_sensor_id = 7,
             target_num_test_days=10, 
             sliding_window = False, 
             regressor=model, 
-            verbose = 1, 
+            verbose = 0, 
             epochs = 15,  
             batch_size = 32, 
             ieee=False, 
@@ -30,3 +30,7 @@ dtr.transfer(source_sensor_id = 7,
 
 
 print(dtr.get_results())
+
+dtr.export_results('results.csv')
+dtr.plot_results()
+dtr.plot_predictions_for_day('2022-01-06')
