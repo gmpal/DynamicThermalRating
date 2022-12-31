@@ -9,9 +9,12 @@ Transfer learning is a machine learning technique that involves transferring kno
 ## What can be found in this repository? 
 The experiments in this repository are carried out on real data collected from 11 sensor stations installed on high voltage overhead power lines. Each sensor station consists of a weather station and a device for measuring line current. The weather station measures variables such as air temperature, wind speed, wind direction, and sun irradiance, while the line current measurement device measures the actual conductor temperature. The data has a time resolution of 1 minute and was collected over a period of two months, resulting in approximately 86000 samples per sensor. **The data cannot be shared for privacy reasons.** 
 
+> N.B. The dates in this repository are random and do not refer to the corresponding period. 
+
+### Artificial data
 Since real data cannot be made public, we generate synthetic data using the statistical properties of the real data. The synthetic data is generated using the a normal distribution centered on the real data mean and having the same standard deviation, and **an arbitrary nonlinear relationship between all input features** is adopted as the conductor temperature column. 15 days of data collected with a 1 minute frequency are produced. The synthetic data can be found in the file `artificial_data.csv`.
 
-> It is important to note that the nonlinear relationship used to create the conductor temperature column is arbitrary and does not necessarily reflect reality. The values of the synthetic data should not be interpreted as physical values, and the synthetic data should not be used for any real-world applications. The synthetic data is provided solely for the purpose of reproducibility and to allow researchers to experiment with different machine learning models and techniques on a consistent dataset.
+> N.B. The nonlinear relationship is arbitrary and does not reflect reality. The values of the synthetic data should not be interpreted as physical values, nor used for any real-world applications. The synthetic data is provided solely for the purpose of reproducibility and to allow researchers to experiment with different machine learning models and techniques on a consistent dataset.
 
 
 ##  What methods are compared? 
@@ -25,9 +28,7 @@ Since real data cannot be made public, we generate synthetic data using the stat
 | Source and Target no Transfer | Method in which the model is trained on data from both the source and target tasks, but no transfer of knowledge from the source task to the target task is attempted. This method serves as a baseline to compare the performance of other methods.                                                    |
 | IEEE738                       | Estimation method for conductor temperature based on the IEEE 738 standard. This method is used as a baseline for comparison with other methods.                                                                                                                                                        |
 
-
-
-## Usage 
+## How to run the code?  
 
 ```sh
 git clone https://github.com/gmpal/DynamicThermalRating
@@ -35,8 +36,14 @@ cd DynamicThermalRating
 pip install -r requirements.txt 
 python main.py
 ```
+> N.B. This code is set to run on the artificial data, and will reproduce the results presented in the [corresponding section](#results-on-artificial-data)
 
-## Results
+## What is the code output? 
+
+This code applies [the approaches](#methods) presented above on [artificial data](#artificial-data). Two random sensors are chosen and the [default parameters](#parameters). The results of the methods are copared,  and provides various ways to visualize and store the results, such as generating plots and saving the results to a CSV file.
+
+### Plot of the MSE for each test day , from sensor 7 to sensor 1
+![Results on real data](/results/results_real.png "Results on real data")
 
 | Testing Day | Parameter-based Transfer MSE | Instance-based Transfer MSE | IEEE738 MSE | Source Only MSE | Target Only MSE | Source + Target (No Transfer) MSE |
 |-------------|------------------------------|-----------------------------|-------------|-----------------|-----------------|-----------------------------------|
@@ -72,50 +79,11 @@ python main.py
 | 2022-02-26  | 0.64                         | 2.04                        | 0.58        | 1.56            | 1.04            | 1.36                              |
 
 
-<!-- No need to manually compare, here's the ranking 
-
-| Testing Day | 1st                      | 2nd                      | 3rd                           | 4th                           | 5th                           | 6th                           |
-|-------------|--------------------------|--------------------------|-------------------------------|-------------------------------|-------------------------------|-------------------------------|
-| 2022-01-28  | Parameter-based Transfer | Target Only              | Instance-based Transfer       | IEEE738                       | Source Only                   | Source + Target (No Transfer) |
-| 2022-01-29  | Parameter-based Transfer | Target Only              | IEEE738                       | Instance-based Transfer       | Source + Target (No Transfer) | Source Only                   |
-| 2022-01-30  | Parameter-based Transfer | IEEE738                  | Target Only                   | Source Only                   | Source + Target (No Transfer) | Instance-based Transfer       |
-| 2022-01-31  | Parameter-based Transfer | Target Only              | IEEE738                       | Instance-based Transfer       | Source Only                   | Source + Target (No Transfer) |
-| 2022-02-01  | Parameter-based Transfer | Target Only              | IEEE738                       | Instance-based Transfer       | Source Only                   | Source + Target (No Transfer) |
-| 2022-02-02  | Parameter-based Transfer | Target Only              | IEEE738                       | Instance-based Transfer       | Source + Target (No Transfer) | Source Only                   |
-| 2022-02-03  | Parameter-based Transfer | Target Only              | IEEE738                       | Instance-based Transfer       | Source Only                   | Source + Target (No Transfer) |
-| 2022-02-04  | IEEE738                  | Parameter-based Transfer | Source + Target (No Transfer) | Target Only                   | Source Only                   | Instance-based Transfer       |
-| 2022-02-05  | Parameter-based Transfer | IEEE738                  | Target Only                   | Source Only                   | Source + Target (No Transfer) | Instance-based Transfer       |
-| 2022-02-06  | Parameter-based Transfer | Target Only              | Source Only                   | IEEE738                       | Instance-based Transfer       | Source + Target (No Transfer) |
-| 2022-02-07  | Target Only              | Parameter-based Transfer | Source + Target (No Transfer) | Instance-based Transfer       | IEEE738                       | Source Only                   |
-| 2022-02-08  | Parameter-based Transfer | Target Only              | Source Only                   | IEEE738                       | Instance-based Transfer       | Source + Target (No Transfer) |
-| 2022-02-09  | Parameter-based Transfer | Target Only              | Source + Target (No Transfer) | Instance-based Transfer       | IEEE738                       | Source Only                   |
-| 2022-02-10  | Parameter-based Transfer | Target Only              | Source Only                   | IEEE738                       | Source + Target (No Transfer) | Instance-based Transfer       |
-| 2022-02-11  | Parameter-based Transfer | IEEE738                  | Target Only                   | Source Only                   | Source + Target (No Transfer) | Instance-based Transfer       |
-| 2022-02-12  | Parameter-based Transfer | IEEE738                  | Target Only                   | Instance-based Transfer       | Source Only                   | Source + Target (No Transfer) |
-| 2022-02-13  | Parameter-based Transfer | Target Only              | Source Only                   | Instance-based Transfer       | Source + Target (No Transfer) | IEEE738                       |
-| 2022-02-14  | Parameter-based Transfer | Target Only              | IEEE738                       | Instance-based Transfer       | Source + Target (No Transfer) | Source Only                   |
-| 2022-02-15  | IEEE738                  | Parameter-based Transfer | Target Only                   | Instance-based Transfer       | Source Only                   | Source + Target (No Transfer) |
-| 2022-02-16  | Parameter-based Transfer | Target Only              | Source Only                   | IEEE738                       | Instance-based Transfer       | Source + Target (No Transfer) |
-| 2022-02-17  | IEEE738                  | Instance-based Transfer  | Target Only                   | Parameter-based Transfer      | Source + Target (No Transfer) | Source Only                   |
-| 2022-02-18  | IEEE738                  | Parameter-based Transfer | Instance-based Transfer       | Target Only                   | Source + Target (No Transfer) | Source Only                   |
-| 2022-02-19  | IEEE738                  | Parameter-based Transfer | Target Only                   | Source Only                   | Instance-based Transfer       | Source + Target (No Transfer) |
-| 2022-02-20  | IEEE738                  | Parameter-based Transfer | Target Only                   | Instance-based Transfer       | Source Only                   | Source + Target (No Transfer) |
-| 2022-02-21  | IEEE738                  | Instance-based Transfer  | Source + Target (No Transfer) | Target Only                   | Parameter-based Transfer      | Source Only                   |
-| 2022-02-22  | IEEE738                  | Instance-based Transfer  | Source + Target (No Transfer) | Target Only                   | Parameter-based Transfer      | Source Only                   |
-| 2022-02-23  | Source Only              | Parameter-based Transfer | Target Only                   | IEEE738                       | Source + Target (No Transfer) | Instance-based Transfer       |
-| 2022-02-24  | Source Only              | Parameter-based Transfer | Source + Target (No Transfer) | IEEE738                       | Target Only                   | Instance-based Transfer       |
-| 2022-02-25  | Source Only              | Parameter-based Transfer | Source + Target (No Transfer) | Target Only                   | IEEE738                       | Instance-based Transfer       |
-| 2022-02-26  | IEEE738                  | Parameter-based Transfer | Target Only                   | Source + Target (No Transfer) | Source Only                   | Instance-based Transfer       | -->
-
-
-### Plot of the MSE for each test day 
-![Results on real data](/results/results_real.png "Results on real data")
-
 ### Plot of the predictions (real values hidden) for one specific day  
 ![Predictions on real data](/results/predictions_for_day_2022-02-06.png "Predictions on real data")
 
 
-## Results on artificial data 
+## Results on artificial data
 
 | Testing Day | Parameter-based Transfer MSE | Instance-based Transfer MSE | Source Only MSE | Target Only MSE | Source + Target (No Transfer) MSE |
 |-------------|------------------------------|-----------------------------|-----------------|-----------------|-----------------------------------|
@@ -129,7 +97,8 @@ python main.py
 | 2022-01-13  | 3.31                         | 11.32                       | 77.72           | 6.86            | 25.44                             |
 | 2022-01-14  | 3.76                         | 12.72                       | 79.53           | 8.06            | 26.75                             |
 | 2022-01-15  | 3.07                         | 12.07                       | 78.19           | 7.45            | 25.96                             
-## The code
+
+## How can I use this code? 
 
 If you want to run the experiments on artificial data with other parameters, or run the experiments on your own data, or adapt the code to your needs, you can find a step by step explanation of the code in our [example jupyter notebook](https://github.com/gmpal/DynamicThermalRating/blob/main/example.ipynb).
 
@@ -142,6 +111,13 @@ To run our code, the data must follow some criteria.
 3. There must be an output variable that you are interested in predicting from the other ones. In our case, it's the `Actual Conductor Temp [°C]` 
 4. There must be several input variables that you want to use for predicting the previously mentioned output variable. In our case, these are: `Wind Speed [m/s]`, `Arranged Wind Dir [°]`, `Air temp [°C]`, `Humidity [%]`, `Sun irradiance thermal flow absorbed by the conductor.[W/m]`, `Current flow [A]`. 
 5. Optionally, you might want to have a column with the conductor temperature predicted using the IEEE738 differential equations, for comparison with the proposed methodology. N.B. If this column is included, it is important that it is aligned with the actual measured temperature. In our case, they are both aligned at time `t+1`.
+
+An example of how data looks like can be found in the following table. (Please notice that the numbers provided are random.)
+
+| Index | Wind Speed [m/s] | Arranged Wind Dir [°] | Air temp [°C] | Humidity [%] | Sun irradiance thermal flow absorbed by the conductor.[W/m] | Current flow [A] | Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C] | Actual Conductor Temp (t+1) [°C] | id | datetime            |
+|-------|------------------|-----------------------|---------------|--------------|-------------------------------------------------------------|------------------|------------------------------------------------------|----------------------------------|----|---------------------|
+| 654   | 0.8              | 51.3                  | 3.6           | 64.3         | 2.1                                                         | 176.578          | 6.428234                                             | 4.3                              | 10 | 2022-02-26 21:53:00 |
+| 655   | 1.8              | 123.2                 | 4.0           | 58.7         | 2.1                                                         | 177.738          | 6.340349                                             | 4.3                              | 10 | 2022-02-26 21:54:00 |
 
 
 ## Adopted models 
@@ -166,21 +142,32 @@ Random forest, on the other hand, can only be used for instance-based transfer l
 model = RandomForestRegressor(n_jobs=-1)
 ```
 
-# Methods 
 
 
 
 ## Data example
 
-| Index | Wind Speed [m/s] | Arranged Wind Dir [°] | Air temp [°C] | Humidity [%] | Sun irradiance thermal flow absorbed by the conductor.[W/m] | Current flow [A] | Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C] | Actual Conductor Temp (t+1) [°C] | id | datetime            |
-|-------|------------------|-----------------------|---------------|--------------|-------------------------------------------------------------|------------------|------------------------------------------------------|----------------------------------|----|---------------------|
-| 199   | 0.8              | 51.3                  | 3.6           | 64.3         | 2.1                                                         | 176.578          | 6.428234                                             | 4.3                              | 10 | 2022-02-26 21:53:00 |
-| 200   | 1.8              | 123.2                 | 4.0           | 58.7         | 2.1                                                         | 177.738          | 6.340349                                             | 4.3                              | 10 | 2022-02-26 21:54:00 |
 
 
 
 
-# Experiments on Real Data
+# Parameters
+
+| Parameter                 | Default | Meaning                                                                                                     |
+|---------------------------|:-------:|-------------------------------------------------------------------------------------------------------------|
+| source_sensor_id          |   N.A.  | ID of the sensor from which data is transferred                                                             |
+| target_sensor_id          |   N.A.  | ID of the sensor to which data is transferred                                                               |
+| method                    |  'both' | Method of transfer learning to use, either 'parameter_based_transfer', 'instance_based_transfer', or 'both' |
+| target_num_available_days |    15   | Number of days from the target sensor to use for training the model                                         |
+| target_num_test_days      |    30   | Number of days from the target sensor to use as a test set                                                  |
+| sliding_window            |  False  | Whether to use all possible windows of size target_num_available_days or a random one                       |
+| regressor                 |  model  | Base Model to use for transfer learning: must be a Neural Network for 'parameter_based_transfer' or 'both'  |
+| verbose                   |    0    | Level of output produced by the function                                                                    |
+| epochs                    |    15   | Number of epochs to use when training the model (if the model is a neural network)                          |
+| batch_size                |    32   | Batch size to use when training the model (if the model is a neural network)                                |
+| ieee                      |  False  | Whether to consider the IEEE738 estimation for the conductor temperature in the methods comparison          |
+| estimators_tradaboost     |    20   | Number of estimators to use in the TrAdaBoost.R2 instance-based approach                                    |
+| store_predictions         |   True  | Whether to keep the predictions made by the model                                                           |
 
 # Acknowledgements
 
