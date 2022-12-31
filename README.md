@@ -14,14 +14,7 @@ Since real data cannot be made public, we generate synthetic data using the stat
 > It is important to note that the nonlinear relationship used to create the conductor temperature column is arbitrary and does not necessarily reflect reality. The values of the synthetic data should not be interpreted as physical values, and the synthetic data should not be used for any real-world applications. The synthetic data is provided solely for the purpose of reproducibility and to allow researchers to experiment with different machine learning models and techniques on a consistent dataset.
 
 
-# What methods are compared? 
-**Parameter-based transfer learning** involves transferring the parameters (weights and biases) learned from a source model to a target model, with the goal of improving the performance of the target model on a new task. This is typically done by training the source model on a large, well-labeled dataset, and then fine-tuning the parameters of the model on a smaller, related dataset for the target task. 
-
-In contrast, **instance-based transfer learning** involves transferring the knowledge gained from solving the source task to the target task by reusing instances or samples from the source task. This is typically done by using the input-output pairs from the source task as additional training data for the target task, and adequately weighting the data points. 
-
-The aforementioned approaches are compared with several baselines. All methods are summarized in the following table.
-
-
+##  What methods are compared? 
 
 | Method                        | Description                                                                                                                                                                                                                                                                                             |
 |-------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|

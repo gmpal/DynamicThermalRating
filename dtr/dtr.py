@@ -289,8 +289,8 @@ class DTR():
         ax.set_xlabel('Time [min]')
         ax.set_ylabel('Internal Condutor Temperature [°C]')
         ax.set_yticklabels([])
-        plt.savefig('predictions_for_day_'+day+'.eps', format='eps', dpi=1000)
-        plt.savefig('predictions_for_day_'+day+'.png', format='png', dpi=1000)
+        plt.savefig('predictions_for_day_'+day+'.eps', format='eps', dpi=1000, facecolor="w", bbox_inches='tight')
+        plt.savefig('predictions_for_day_'+day+'.png', format='png', dpi=1000, facecolor="w", bbox_inches='tight')
 
 
     def export_results(self, filename):
@@ -312,8 +312,8 @@ class DTR():
         ax.set_xticks(testing_days)
         ax.set_xticklabels(testing_days.tolist(), rotation=90)
         ax.set_title('MSE of the tested approaches for each testing day')
-        fig.savefig(filename+'.eps', format='eps', dpi=1000)
-        fig.savefig(filename+'.png', format='png', dpi=1000)
+        fig.savefig(filename+'.eps', format='eps', dpi=1000, facecolor="w", bbox_inches='tight')
+        fig.savefig(filename+'.png', format='png', dpi=1000, facecolor="w", bbox_inches='tight')
 
 
     
