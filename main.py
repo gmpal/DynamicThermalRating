@@ -1,6 +1,6 @@
 from dtr import DTR
 import pandas as pd
-from keras.models import load_model
+import tensorflow as tf
 from sklearn.ensemble import RandomForestRegressor
 
 
@@ -11,7 +11,7 @@ output = ['Actual Conductor Temp (t+1) [°C]']
 
 dtr = DTR(data, inputs, output)
 
-model = load_model('model.h5')
+model = tf.keras.load_model('model.h5')
 
 
 dtr.transfer(source_sensor_id = 7, 

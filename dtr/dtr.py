@@ -4,10 +4,7 @@ import multiprocessing as mp
 from scipy.stats import gaussian_kde
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics import mean_squared_error
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.preprocessing import StandardScaler
 
-from keras.models import clone_model
 import tensorflow as tf
 
 from adapt.instance_based import * 
@@ -62,9 +59,9 @@ class DTR():
             regressor_target = clone(regressor)
         # if keras regressor
         else:
-            regressor_source = clone_model(regressor)
-            regressor_mix = clone_model(regressor)
-            regressor_target = clone_model(regressor)
+            regressor_source = tf.keras.models.clone_model(regressor)
+            regressor_mix = tf.keras.models.clone_model(regressor)
+            regressor_target = tf.keras.models.clone_model(regressor)
 
             regressor_source.compile(loss='mse')
             regressor_mix.compile(loss='mse')
@@ -298,7 +295,7 @@ class DTR():
         self.results.round(2).to_csv(filename, index=False)
 
 
-    def plot_results(self):
+    def plot_results(self, filename):
         features = []
         for feature in self.results.columns:
             if feature != 'Testing Day':
@@ -313,8 +310,8 @@ class DTR():
         ax.set_xticks(testing_days)
         ax.set_xticklabels(testing_days.tolist(), rotation=90)
         ax.set_title('MSE of the tested approaches for each testing day')
-        fig.savefig('results.eps', format='eps', dpi=1000)
-        fig.savefig('results.png', format='png', dpi=1000)
+        fig.savefig(filename+'.eps', format='eps', dpi=1000)
+        fig.savefig(filename+'.png', format='png', dpi=1000)
 
 
     
