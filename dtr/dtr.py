@@ -281,12 +281,14 @@ class DTR():
         day_predictions.index = mixed_daily_predictions.keys()
         return day_predictions
 
-    def plot_predictions_for_day(self, day):
+    def plot_predictions_for_day(self, day, features):
         day_predictions = self.get_predictions_for_day(day).T[1:]
+        day_predictions = day_predictions[features]
         fig, ax = plt.subplots(figsize=(20,10))
         day_predictions.plot(ax=ax, title='Predictions for day: '+day)
         ax.set_xlabel('Time [min]')
         ax.set_ylabel('Internal Condutor Temperature [°C]')
+        ax.set_yticklabels([])
         plt.savefig('predictions_for_day_'+day+'.eps', format='eps', dpi=1000)
         plt.savefig('predictions_for_day_'+day+'.png', format='png', dpi=1000)
 
@@ -396,3 +398,46 @@ class DTR():
 
     def get_predictions(self):
         return self.predictions
+
+    def get_best_approaches(self):
+
+        df = self.results.copy()
+
+        # Find the name of the best approach for each row
+        df['Best Approach'] = df[['Parameter-based Transfer MSE', 'Instance-based Transfer MSE', 'IEEE738 MSE', 'Source Only MSE', 'Target Only MSE', 'Source + Target (No Transfer) MSE']].idxmin(axis=1)
+
+        df['Best Approach'] = df['Best Approach'].str.replace(' MSE', '')
+
+        # Keep only the 'Testing Day' and 'Best Approach' columns
+        df = df[['Testing Day', 'Best Approach']]
+
+        # Print the resulting table
+        return df 
+
+
+
+    def get_rankings(self):
+
+        df = self.results.copy()
+
+        # Get the MSE values for each row as a separate Series
+        mse_values = df[['Parameter-based Transfer MSE', 'Instance-based Transfer MSE', 'IEEE738 MSE', 'Source Only MSE', 'Target Only MSE', 'Source + Target (No Transfer) MSE']]
+
+        # Get the names of the approaches as a list
+        approach_names = mse_values.columns.tolist()
+
+        sorted_indices = pd.DataFrame(mse_values.values.argsort(axis=1))
+        # Create a new column with the ranking of the approaches
+        df['Ranking'] = sorted_indices.apply(lambda x: [approach_names[i] for i in x], axis=1)
+
+        # Keep only the 'Testing Day' and 'Ranking' columns
+        df = df[['Testing Day', 'Ranking']]
+
+        df = df.set_index('Testing Day').Ranking.apply(pd.Series).reset_index()
+
+        for col in df.columns[1:]:
+            df[col] = df[col].str.replace(' MSE', '')
+
+        df.columns = ['Testing Day', '1st', '2nd', '3rd', '4th', '5th', '6th']
+
+        return df

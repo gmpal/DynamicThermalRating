@@ -45,6 +45,85 @@ pip install -r requirements.txt
 python main.py
 ```
 
+## Results
+
+| Testing Day | Parameter-based Transfer MSE | Instance-based Transfer MSE | IEEE738 MSE | Source Only MSE | Target Only MSE | Source + Target (No Transfer) MSE |
+|-------------|------------------------------|-----------------------------|-------------|-----------------|-----------------|-----------------------------------|
+| 2022-01-28  | 0.72                         | 1.12                        | 1.28        | 1.83            | 0.86            | 2.26                              |
+| 2022-01-29  | 0.82                         | 1.34                        | 1.23        | 1.8             | 0.93            | 1.75                              |
+| 2022-01-30  | 0.39                         | 1.16                        | 0.49        | 0.54            | 0.53            | 0.76                              |
+| 2022-01-31  | 0.37                         | 0.86                        | 0.75        | 1.29            | 0.46            | 1.55                              |
+| 2022-02-01  | 0.34                         | 0.67                        | 0.54        | 2.04            | 0.53            | 2.17                              |
+| 2022-02-02  | 0.8                          | 1.09                        | 0.89        | 3.47            | 0.83            | 2.0                               |
+| 2022-02-03  | 0.37                         | 0.75                        | 0.59        | 0.88            | 0.41            | 1.14                              |
+| 2022-02-04  | 0.62                         | 2.22                        | 0.33        | 1.29            | 0.89            | 0.67                              |
+| 2022-02-05  | 0.25                         | 1.05                        | 0.38        | 0.49            | 0.41            | 0.64                              |
+| 2022-02-06  | 0.21                         | 0.8                         | 0.62        | 0.54            | 0.31            | 1.12                              |
+| 2022-02-07  | 0.69                         | 1.04                        | 1.8         | 3.29            | 0.64            | 1.03                              |
+| 2022-02-08  | 0.28                         | 1.0                         | 0.77        | 0.65            | 0.37            | 1.18                              |
+| 2022-02-09  | 1.04                         | 1.8                         | 4.16        | 9.66            | 1.14            | 1.67                              |
+| 2022-02-10  | 0.31                         | 1.31                        | 0.96        | 0.78            | 0.46            | 1.04                              |
+| 2022-02-11  | 0.48                         | 1.28                        | 0.49        | 0.96            | 0.73            | 1.01                              |
+| 2022-02-12  | 0.79                         | 1.86                        | 0.96        | 2.93            | 1.5             | 4.08                              |
+| 2022-02-13  | 0.42                         | 1.15                        | 1.38        | 0.99            | 0.49            | 1.31                              |
+| 2022-02-14  | 0.8                          | 1.54                        | 1.29        | 2.19            | 0.89            | 2.15                              |
+| 2022-02-15  | 1.62                         | 2.67                        | 0.96        | 3.5             | 2.57            | 3.99                              |
+| 2022-02-16  | 0.4                          | 0.81                        | 0.57        | 0.54            | 0.49            | 1.63                              |
+| 2022-02-17  | 0.6                          | 0.39                        | 0.25        | 4.81            | 0.48            | 0.63                              |
+| 2022-02-18  | 1.93                         | 2.98                        | 0.52        | 4.79            | 3.03            | 4.74                              |
+| 2022-02-19  | 0.51                         | 1.15                        | 0.49        | 1.04            | 0.76            | 1.53                              |
+| 2022-02-20  | 0.72                         | 1.35                        | 0.65        | 1.87            | 1.03            | 2.03                              |
+| 2022-02-21  | 1.81                         | 0.73                        | 0.63        | 7.03            | 1.56            | 1.37                              |
+| 2022-02-22  | 2.36                         | 1.87                        | 0.95        | 7.67            | 2.31            | 2.25                              |
+| 2022-02-23  | 1.13                         | 2.39                        | 1.69        | 0.87            | 1.3             | 1.87                              |
+| 2022-02-24  | 0.54                         | 2.44                        | 0.83        | 0.34            | 0.83            | 0.6                               |
+| 2022-02-25  | 0.72                         | 1.59                        | 0.85        | 0.55            | 0.83            | 0.74                              |
+| 2022-02-26  | 0.64                         | 2.04                        | 0.58        | 1.56            | 1.04            | 1.36                              |
+
+
+<!-- No need to manually compare, here's the ranking 
+
+| Testing Day | 1st                      | 2nd                      | 3rd                           | 4th                           | 5th                           | 6th                           |
+|-------------|--------------------------|--------------------------|-------------------------------|-------------------------------|-------------------------------|-------------------------------|
+| 2022-01-28  | Parameter-based Transfer | Target Only              | Instance-based Transfer       | IEEE738                       | Source Only                   | Source + Target (No Transfer) |
+| 2022-01-29  | Parameter-based Transfer | Target Only              | IEEE738                       | Instance-based Transfer       | Source + Target (No Transfer) | Source Only                   |
+| 2022-01-30  | Parameter-based Transfer | IEEE738                  | Target Only                   | Source Only                   | Source + Target (No Transfer) | Instance-based Transfer       |
+| 2022-01-31  | Parameter-based Transfer | Target Only              | IEEE738                       | Instance-based Transfer       | Source Only                   | Source + Target (No Transfer) |
+| 2022-02-01  | Parameter-based Transfer | Target Only              | IEEE738                       | Instance-based Transfer       | Source Only                   | Source + Target (No Transfer) |
+| 2022-02-02  | Parameter-based Transfer | Target Only              | IEEE738                       | Instance-based Transfer       | Source + Target (No Transfer) | Source Only                   |
+| 2022-02-03  | Parameter-based Transfer | Target Only              | IEEE738                       | Instance-based Transfer       | Source Only                   | Source + Target (No Transfer) |
+| 2022-02-04  | IEEE738                  | Parameter-based Transfer | Source + Target (No Transfer) | Target Only                   | Source Only                   | Instance-based Transfer       |
+| 2022-02-05  | Parameter-based Transfer | IEEE738                  | Target Only                   | Source Only                   | Source + Target (No Transfer) | Instance-based Transfer       |
+| 2022-02-06  | Parameter-based Transfer | Target Only              | Source Only                   | IEEE738                       | Instance-based Transfer       | Source + Target (No Transfer) |
+| 2022-02-07  | Target Only              | Parameter-based Transfer | Source + Target (No Transfer) | Instance-based Transfer       | IEEE738                       | Source Only                   |
+| 2022-02-08  | Parameter-based Transfer | Target Only              | Source Only                   | IEEE738                       | Instance-based Transfer       | Source + Target (No Transfer) |
+| 2022-02-09  | Parameter-based Transfer | Target Only              | Source + Target (No Transfer) | Instance-based Transfer       | IEEE738                       | Source Only                   |
+| 2022-02-10  | Parameter-based Transfer | Target Only              | Source Only                   | IEEE738                       | Source + Target (No Transfer) | Instance-based Transfer       |
+| 2022-02-11  | Parameter-based Transfer | IEEE738                  | Target Only                   | Source Only                   | Source + Target (No Transfer) | Instance-based Transfer       |
+| 2022-02-12  | Parameter-based Transfer | IEEE738                  | Target Only                   | Instance-based Transfer       | Source Only                   | Source + Target (No Transfer) |
+| 2022-02-13  | Parameter-based Transfer | Target Only              | Source Only                   | Instance-based Transfer       | Source + Target (No Transfer) | IEEE738                       |
+| 2022-02-14  | Parameter-based Transfer | Target Only              | IEEE738                       | Instance-based Transfer       | Source + Target (No Transfer) | Source Only                   |
+| 2022-02-15  | IEEE738                  | Parameter-based Transfer | Target Only                   | Instance-based Transfer       | Source Only                   | Source + Target (No Transfer) |
+| 2022-02-16  | Parameter-based Transfer | Target Only              | Source Only                   | IEEE738                       | Instance-based Transfer       | Source + Target (No Transfer) |
+| 2022-02-17  | IEEE738                  | Instance-based Transfer  | Target Only                   | Parameter-based Transfer      | Source + Target (No Transfer) | Source Only                   |
+| 2022-02-18  | IEEE738                  | Parameter-based Transfer | Instance-based Transfer       | Target Only                   | Source + Target (No Transfer) | Source Only                   |
+| 2022-02-19  | IEEE738                  | Parameter-based Transfer | Target Only                   | Source Only                   | Instance-based Transfer       | Source + Target (No Transfer) |
+| 2022-02-20  | IEEE738                  | Parameter-based Transfer | Target Only                   | Instance-based Transfer       | Source Only                   | Source + Target (No Transfer) |
+| 2022-02-21  | IEEE738                  | Instance-based Transfer  | Source + Target (No Transfer) | Target Only                   | Parameter-based Transfer      | Source Only                   |
+| 2022-02-22  | IEEE738                  | Instance-based Transfer  | Source + Target (No Transfer) | Target Only                   | Parameter-based Transfer      | Source Only                   |
+| 2022-02-23  | Source Only              | Parameter-based Transfer | Target Only                   | IEEE738                       | Source + Target (No Transfer) | Instance-based Transfer       |
+| 2022-02-24  | Source Only              | Parameter-based Transfer | Source + Target (No Transfer) | IEEE738                       | Target Only                   | Instance-based Transfer       |
+| 2022-02-25  | Source Only              | Parameter-based Transfer | Source + Target (No Transfer) | Target Only                   | IEEE738                       | Instance-based Transfer       |
+| 2022-02-26  | IEEE738                  | Parameter-based Transfer | Target Only                   | Source + Target (No Transfer) | Source Only                   | Instance-based Transfer       | -->
+
+
+### Plot of the MSE for each test day 
+![Results on real data](/results/results_real.png "Results on real data")
+
+### Plot of the predictions (real values hidden) for one specific day  
+![Predictions on real data](/results/predictions_for_day_2022-02-06.png "Predictions on real data")
+
+
 ## Results on artificial data 
 
 | Testing Day | Parameter-based Transfer MSE | Instance-based Transfer MSE | Source Only MSE | Target Only MSE | Source + Target (No Transfer) MSE |
@@ -58,16 +137,10 @@ python main.py
 | 2022-01-12  | 3.2                          | 11.77                       | 77.77           | 7.45            | 26.3                              |
 | 2022-01-13  | 3.31                         | 11.32                       | 77.72           | 6.86            | 25.44                             |
 | 2022-01-14  | 3.76                         | 12.72                       | 79.53           | 8.06            | 26.75                             |
-| 2022-01-15  | 3.07                         | 12.07                       | 78.19           | 7.45            | 25.96                             |
-
-![Results on artificial data](/results.png "Results on artificial data")
-
-![Results on artificial data](/predictions_for_day_2022-01-06.png "Results on artificial data")
-
-
+| 2022-01-15  | 3.07                         | 12.07                       | 78.19           | 7.45            | 25.96                             
 ## The code
 
-If you want to run the experiments on artificial data with other parameters, or run the experiments on your own data, or adapt the code to your needs, you can find a step by step explanation of the code in our [example jupyter notebook](link).
+If you want to run the experiments on artificial data with other parameters, or run the experiments on your own data, or adapt the code to your needs, you can find a step by step explanation of the code in our [example jupyter notebook](https://github.com/gmpal/DynamicThermalRating/blob/main/example.ipynb).
 
 
 ## Data requirements 
