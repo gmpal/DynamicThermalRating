@@ -264,7 +264,7 @@ class DTR():
 
 
     def get_results(self):
-        return self.results
+        return self.results.round(2)
     
     def get_all_predictions(self):
         all_predictions = {}
@@ -286,13 +286,16 @@ class DTR():
 
     def plot_predictions_for_day(self, day):
         day_predictions = self.get_predictions_for_day(day).T[1:]
-        day_predictions.plot(figsize=(20,10), title='Predictions for day: '+day)
+        fig, ax = plt.subplots(figsize=(20,10))
+        day_predictions.plot(ax=ax, title='Predictions for day: '+day)
+        ax.set_xlabel('Time [min]')
+        ax.set_ylabel('Internal Condutor Temperature [°C]')
         plt.savefig('predictions_for_day_'+day+'.eps', format='eps', dpi=1000)
         plt.savefig('predictions_for_day_'+day+'.png', format='png', dpi=1000)
 
 
     def export_results(self, filename):
-        self.results.to_csv(filename, index=False)
+        self.results.round(2).to_csv(filename, index=False)
 
 
     def plot_results(self):
@@ -307,7 +310,8 @@ class DTR():
         ax.legend()
         ax.set_xlabel('Testing day [-]')
         ax.set_ylabel('Mean Squared Error [°C]²')
-        ax.set_xticklabels(testing_days.to_list(), rotation=90)
+        ax.set_xticks(testing_days)
+        ax.set_xticklabels(testing_days.tolist(), rotation=90)
         ax.set_title('MSE of the tested approaches for each testing day')
         fig.savefig('results.eps', format='eps', dpi=1000)
         fig.savefig('results.png', format='png', dpi=1000)

@@ -1,14 +1,40 @@
 # DynamicThermalRating
 
-This repository contains experiments on Dynamic Thermal Rating (DTR), a method for real-time monitoring of a transmission line's thermal capacity. Experiments may include simulations, data analyses, and testing of DTR algorithms.
+This repository contains experiments of Transfer Learning applied to Dynamic Thermal Rating (DTR), a method for real-time monitoring of a transmission line's thermal capacity. The proposed code implements various methods of Transfer Learning, including parameter-based transfer and instance-based transfer, and uses these methods to assess the utility of transfer learning for DTR. The goal of this work is to determine whether transfer learning **can be used** to improve the accuracy of temperature prediction in the context of DTR, and to compare the performance of different methods for this application.
 
-Currently, the main idea of this repository is to explore the use of transfer learning for dynamic thermal rating (DTR). The proposed code implements various methods of transfer learning, including parameter-based transfer and instance-based transfer, and uses these methods to assess the utility of transfer learning for DTR. The goal of this work is to determine whether transfer learning can be used to improve the accuracy of temperature prediction in the context of DTR, and to compare the performance of different methods for this application.
+## What is transfer learning?
 
 Transfer learning is a machine learning technique that involves transferring knowledge or information learned from one task to a related task, with the goal of improving the performance of the model on the new task. It is based on the idea that it is often easier to learn a new task if you have some prior knowledge or experience related to that task, rather than starting from scratch. In practice, transfer learning involves training a model on a large, well-labeled dataset (the source task) and then using the trained model to perform a related task (the target task).
 
-The experiments in this repository are carried out on real data collected from 11 sensor stations installed on high voltage overhead power lines. Each sensor station consists of a weather station and a device for measuring line current. The weather station measures variables such as air temperature, wind speed, wind direction, and sun irradiance, while the line current measurement device measures the actual conductor temperature. The data has a time resolution of 1 minute and was collected over a period of two months, resulting in approximately 86000 samples per sensor. The data cannot be shared for privacy reasons. 
+## What can be found in this repository? 
+The experiments in this repository are carried out on real data collected from 11 sensor stations installed on high voltage overhead power lines. Each sensor station consists of a weather station and a device for measuring line current. The weather station measures variables such as air temperature, wind speed, wind direction, and sun irradiance, while the line current measurement device measures the actual conductor temperature. The data has a time resolution of 1 minute and was collected over a period of two months, resulting in approximately 86000 samples per sensor. **The data cannot be shared for privacy reasons.** 
 
-To facilitate reproducibility, a simple synthetic dataset is also provided. 
+Since real data cannot be made public, we generate synthetic data using the statistical properties of the real data. The synthetic data is generated using the a normal distribution centered on the real data mean and having the same standard deviation, and **an arbitrary nonlinear relationship between all input features** is adopted as the conductor temperature column. 
+
+> It is important to note that the nonlinear relationship used to create the conductor temperature column is arbitrary and does not necessarily reflect reality. The values of the synthetic data should not be interpreted as physical values, and the synthetic data should not be used for any real-world applications. The synthetic data is provided solely for the purpose of reproducibility and to allow researchers to experiment with different machine learning models and techniques on a consistent dataset.
+
+86000 samples per sensor are generated, to simulate two months of data collected with a 1 minute frequency. The synthetic data can be found in the file `synthetic_data.zip`.
+
+
+# What methods are compared? 
+**Parameter-based transfer learning** involves transferring the parameters (weights and biases) learned from a source model to a target model, with the goal of improving the performance of the target model on a new task. This is typically done by training the source model on a large, well-labeled dataset, and then fine-tuning the parameters of the model on a smaller, related dataset for the target task. 
+
+In contrast, **instance-based transfer learning** involves transferring the knowledge gained from solving the source task to the target task by reusing instances or samples from the source task. This is typically done by using the input-output pairs from the source task as additional training data for the target task, and adequately weighting the data points. 
+
+The aforementioned approaches are compared with several baselines. All methods are summarized in the following table.
+
+
+
+| Method                        | Description                                                                                                                                                                                                                                                                                             |
+|-------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Parameter-Based Transfer      | The weights of a pre-trained model are fine-tuned on a new task using a small amount of labeled data from the new task. The pre-trained model serves as a starting point and the fine-tuning adjusts the model to the new task.                                                                         |
+| Instance-Based Transfer       | Method in which a model is trained on a dataset that consists of both a small amount of labeled data from the new task and labeled data from a related task. Each data point is re-weighted to give it less or more influence on the model's predictions, based on its performance on the target data.. |
+| Source Only                   | Method in which the model is trained only on data from the source task and then tested on data from the target task. This method serves as a baseline to compare the performance of other methods.                                                                                                      |
+| Target Only                   | Method in which the model is trained only on data from the target task. This method serves as a baseline to compare the performance of other methods.                                                                                                                                                   |
+| Source and Target no Transfer | Method in which the model is trained on data from both the source and target tasks, but no transfer of knowledge from the source task to the target task is attempted. This method serves as a baseline to compare the performance of other methods.                                                    |
+| IEEE738                       | Estimation method for conductor temperature based on the IEEE 738 standard. This method is used as a baseline for comparison with other methods.                                                                                                                                                        |
+
+
 
 ## Usage 
 
@@ -19,103 +45,29 @@ pip install -r requirements.txt
 python main.py
 ```
 
-## Adapt the code
+## Results on artificial data 
 
-First, we import the necessary modules
-```py
-from dtr import DTR
-import pandas as pd
-from keras.models import load_model
-```
+| Testing Day | Parameter-based Transfer MSE | Instance-based Transfer MSE | Source Only MSE | Target Only MSE | Source + Target (No Transfer) MSE |
+|-------------|------------------------------|-----------------------------|-----------------|-----------------|-----------------------------------|
+| 2022-01-06  | 2.96                         | 11.65                       | 78.5            | 7.38            | 25.61                             |
+| 2022-01-07  | 2.8                          | 12.24                       | 78.93           | 7.52            | 26.32                             |
+| 2022-01-08  | 6.42                         | 14.97                       | 80.02           | 10.15           | 29.5                              |
+| 2022-01-09  | 3.15                         | 12.27                       | 76.93           | 7.36            | 26.07                             |
+| 2022-01-10  | 3.28                         | 11.91                       | 77.23           | 6.99            | 25.61                             |
+| 2022-01-11  | 9.97                         | 19.85                       | 86.21           | 14.84           | 34.07                             |
+| 2022-01-12  | 3.2                          | 11.77                       | 77.77           | 7.45            | 26.3                              |
+| 2022-01-13  | 3.31                         | 11.32                       | 77.72           | 6.86            | 25.44                             |
+| 2022-01-14  | 3.76                         | 12.72                       | 79.53           | 8.06            | 26.75                             |
+| 2022-01-15  | 3.07                         | 12.07                       | 78.19           | 7.45            | 25.96                             |
 
-Then we load the data, and we clearly specify the inputs and the outputs (read more in [Data Requirements](#data-requirements))
-```py
-data = pd.read_csv('./artificial_data.csv',index_col=0, infer_datetime_format=True, parse_dates=['datetime'])
-inputs = ['Wind Speed [m/s]', 'Arranged Wind Dir [°]', 'Air temp [°C]', 'Humidity [%]', 'Sun irradiance thermal flow absorbed by the conductor.[W/m]', 'Current flow [A]']
-output = ['Actual Conductor Temp (t+1) [°C]']
-```
+![Results on artificial data](/results.png "Results on artificial data")
 
-We instantiate our DTR object as follows, passing the `data`, `inputs`, and `outputs` parameter from before. The DTR class provides user-friendly functions to easily perform the proposed experiments and adapt them to run with your own data. 
-
-```py
-dtr = DTR(data, inputs, output)
-```
-
-The `compute_sensors_distance` function computes various statistics that measure the distance between pairs of sensors in the given dataset. Specifically, it computes the mean difference, standard deviation difference, euclidean distance, manhattan distance, cosine similarity, and KDE area difference between the two sensor dataframes. 
-```py
-dtr.compute_sensors_distance()
-```
-If the dataset are particularly large, the execution might be long. Therefore, it is recommended to export the computed distances after the first execution, and then load them for the following executions, as follows: 
-
-```py
-dtr.export_distances('./distances.csv')
-dtr.load_distances('./distances.csv')
-```
-You can inspect the metrics measured as follows, and find the couple of sensors that minimizes the distance of your preference. 
-
-```py
-print(dtr.get_distances())
-```
-Before starting, we will load our base regressor (read more in [Adopted Models](#adopted-models)).
-
-```py
-model = load_model('model.h5')
-```
-
-And here is the core of our code. The `transfer` function is designed to perform transfer learning from one sensor (identified by the `source_sensor_id` parameter) to another sensor (identified by the `target_sensor_id parameter`) using a specified method. 
+![Results on artificial data](/predictions_for_day_2022-01-06.png "Results on artificial data")
 
 
-```py
-dtr.transfer(source_sensor_id = 7, 
-            target_sensor_id= 1, 
-            method = 'parameter_based_transfer', 
-            target_num_available_days = 15, 
-            target_num_test_days=30, 
-            sliding_window = False, 
-            regressor=model, 
-            verbose = 1, 
-            epochs = 5,  
-            batch_size = 500, 
-            ieee=True, 
-            estimators_tradaboost = 5,
-            store_predictions=True)     
-```
+## The code
 
-The `method` parameter can take on the value `parameter_based_transfer`, `instance_based_transfer`, `both`. The differences between the methods are explained in the [Methods](#methods) section.  which suggests that the function performs some form of parameter-based transfer learning.
-
-The `target_num_available_days` specifies the number of days from the target sensor that are available when performing transfer learning. `target_num_test_days` instead indicates the number of days to be used as a test set. Exactly which days are considered is chosen as follows: for the test set it's always the last `target_num_test_days` of the target sensor; for the available data there are two options. If `sliding_window` is False, a random window of `target_num_available_days` is chosen between the beginning of the target sensor data and the beginning of the test set.  If `sliding_window` is True, *all possible windows* of size `target_num_available_days` that are located between the beginning of the target sensor data and the beginning of the test set are tested, and the result is averaged. (Notice that this might be particularly slow!)
-
-The `regressor` parameter specifies a model that will be used to perform the transfer. The `epochs` and `batch_size` parameters specify the number of epochs and batch size to be used in training the model, when the model is a Neural Network.  The `estimators_tradaboost` parameter specifies the number of estimators to use in the TrAdaBoost.R2 instance-based approach. 
->explain here the approaches (or reference)
-
-The `ieee` parameter determines whether or not the function should consider the IEEE738 estimation for the conductor temperature in the methods comparison. NB: the function **does not compute it**! It has to be present in the dataset already. 
-
-The `store_predictions` parameter determines whether or not to keep the predictions made by the model. This defaults to False, because storing all the predictions might significantly increase RAM usage. 
-
-Finally, the `verbose` parameter controls the level of output produced by the function.
-
-
-
-The method `plot_results()` can be used to plot the columns of the results obtained from the previous. The plot has the testing day on the x-axis and the metric value on the y-axis, for all the different teted methods. 
-
-```py
-dtr.plot_results()
-```
-
-If the user needs the results table, for specific manipulations, she can get it using the following method `get_results()`. 
-
-```py
-results = dtr.get_results()
-```
-
-If the `store_predictions` was `True` in the `dtr.transfer()` function, the user can decide to visualize the temperature predicted by each method on one specific testing day.  the used needs the results table, for specific manipulations, she can get it using the following method `get_results`. 
-```py
-dtr.plot_predictions_for_day('2022-01-28')
-```
-
-```py
-dtr.get_predictions()
-```
+If you want to run the experiments on artificial data with other parameters, or run the experiments on your own data, or adapt the code to your needs, you can find a step by step explanation of the code in our [example jupyter notebook](link).
 
 
 ## Data requirements 
@@ -152,11 +104,7 @@ model = RandomForestRegressor(n_jobs=-1)
 
 # Methods 
 
-**Parameter-based transfer learning** involves transferring the parameters (weights and biases) learned from a source model to a target model, with the goal of improving the performance of the target model on a new task. This is typically done by training the source model on a large, well-labeled dataset, and then fine-tuning the parameters of the model on a smaller, related dataset for the target task. 
 
-In contrast, **instance-based transfer learning** involves transferring the knowledge gained from solving the source task to the target task by reusing instances or samples from the source task. This is typically done by using the input-output pairs from the source task as additional training data for the target task, and adequately weighting the data points. 
-
-Both parameter-based and instance-based transfer learning aim to improve the performance of a model on a new task by leveraging knowledge from a related task.
 
 ## Data example
 
@@ -166,13 +114,7 @@ Both parameter-based and instance-based transfer learning aim to improve the per
 | 200   | 1.8              | 123.2                 | 4.0           | 58.7         | 2.1                                                         | 177.738          | 6.340349                                             | 4.3                              | 10 | 2022-02-26 21:54:00 |
 
 
-## Artificial Data
 
-Since real data cannot be made public, we generate synthetic data using the statistical properties of the real data. The synthetic data is generated using the a normal distribution centered on the real data mean and having the same standard deviation, and a nonlinear relationship between all input features is adopted, after rescaling, as the conductor temperature column `Actual Conductor Temp (t+1) [°C]`. 
-
->It is important to note that the nonlinear relationship used to create the conductor temperature column is arbitrary and does not necessarily reflect reality. The values of the synthetic data should not be interpreted as physical values, and the synthetic data should not be used for any real-world applications. The synthetic data is provided solely for the purpose of reproducibility and to allow researchers to experiment with different machine learning models and techniques on a consistent dataset.
-
-86000 samples per sensor are generated, to simulate two months of data collected with a 1 minute frequency. The synthetic data can be found in the file `synthetic_data.zip`.
 
 # Experiments on Real Data
 
