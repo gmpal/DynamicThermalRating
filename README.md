@@ -116,10 +116,10 @@ python main.py
 
 
 ### Plot of the MSE for each test day 
-![Results on real data](/results/results_real.png "Results on real data")
+![Results on real data](/results/results_real.eps "Results on real data")
 
 ### Plot of the predictions (real values hidden) for one specific day  
-![Predictions on real data](/results/predictions_for_day_2022-02-06.png "Predictions on real data")
+![Predictions on real data](/results/predictions_for_day_2022-02-06.eps "Predictions on real data")
 
 
 ## Results on artificial data 
