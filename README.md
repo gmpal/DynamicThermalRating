@@ -51,6 +51,7 @@ The same code is executed on real data, and despite the data cannot be shared, w
 
 
 ## Distance computation and sensors selection
+We report a slice of the distance table that can be found in the corresponding `distance.csv` file. It is clear that the couple (7,1) maximizes in absolute terms the `mean_difference`, the `std_difference`, the `euclidean_distance`, and the `manhattan_distance`, proving to be a valid candidate for attempting Transfer Learning. 
 
 | sensor1 | sensor2 | mean_difference     | std_difference    | euclidean_distance | manhattan_distance | cosine_similarity  | area_difference       |
 |---------|---------|---------------------|-------------------|--------------------|--------------------|--------------------|-----------------------|
@@ -165,14 +166,25 @@ model = RandomForestRegressor(n_jobs=-1)
 
 
 
-
-## Data example
-
-
-
-
-
 # Parameters
+
+The core of our code is the `transfer` function,  designed to perform transfer learning from one sensor (identified by the `source_sensor_id` parameter) to another sensor (identified by the `target_sensor_id parameter`) using a specified method. In the following table, you can find an explanation of the parameters. 
+
+```py
+dtr.transfer(source_sensor_id = 7, 
+            target_sensor_id= 1, 
+            method = 'parameter_based_transfer', 
+            target_num_available_days = 15, 
+            target_num_test_days=30, 
+            sliding_window = False, 
+            regressor=model, 
+            verbose = 0, 
+            epochs = 15,  
+            batch_size = 32, 
+            ieee=True, 
+            estimators_tradaboost = 20,
+            store_predictions=True)     
+```
 
 | Parameter                 | Default | Meaning                                                                                                     |
 |---------------------------|:-------:|-------------------------------------------------------------------------------------------------------------|
