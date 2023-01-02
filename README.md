@@ -40,11 +40,29 @@ python main.py
 
 ## What is the code output? 
 
-This code applies [the approaches](#methods) presented above on [artificial data](#artificial-data). Two random sensors are chosen and the [default parameters](#parameters). The results of the methods are copared,  and provides various ways to visualize and store the results, such as generating plots and saving the results to a CSV file.
+This code applies [the approaches](#methods) presented above on [artificial data](#artificial-data). Two random sensors are chosen and a run with the [default parameters](#parameters) is executed. The results of the methods are collected in a table. A figure from the table is generated and stored. The exact output of the code can be found [here](#results-on-artificial-data).
 
-### Plot of the MSE for each test day , from sensor 7 to sensor 1
-![Results on real data](/results/results_real.png "Results on real data")
+# Results on Real Data 
+The same code is executed on real data, and despite the data cannot be shared, we provide in this Section the corresponding results. The results on real data are produced with 3 steps:
+1. We select the couple of sensor that has the biggest **distance**, according to [several metrics that are computed](#distance-computation-and-sensors-selection).
+2. We run the code on the corresponding couple of sensors, with the default parameters (tuned in additional experiments) and we [collect the results in a table](#table-of-results)
+3. We [plot the metrics](#plot-of-the-mse-for-each-test-day--from-sensor-7-to-sensor-1) in the previous table for easier interpretation
+4. We [plot the temperature prediction](#plot-of-the-predictions-real-values-hidden-for-one-specific-day) of some methods of interest for the day where transfer learning performs better, for visualization purposes. 
 
+
+## Distance computation and sensors selection
+
+| sensor1 | sensor2 | mean_difference     | std_difference    | euclidean_distance | manhattan_distance | cosine_similarity  | area_difference       |
+|---------|---------|---------------------|-------------------|--------------------|--------------------|--------------------|-----------------------|
+| ...     | ...     | ...                 | ...               | ...                | ...                | ...                | ...                   |
+| 7.0     | 10.0    | -16.556020928342644 | 31.60934701014027 | 180.81259555381862 | 243.64772160017102 | 0.6751814101587975 | 0.02686197219180984   |
+| 7.0     | 0.0     | -15.771707782902586 | 28.16218527122819 | 187.8804465572258  | 268.02145106671554 | 0.6605007017626204 | 0.04913550595231043   |
+| 7.0     | 1.0     | -18.549434012442394 | 33.06828655271373 | 191.52522143460632 | 269.46370537213176 | 0.6770056490314064 | 0.03031061081545547   |
+| 7.0     | 9.0     | -15.156947710321639 | 24.76355630662727 | 178.9075853931799  | 252.84135820011312 | 0.6712667335969169 | 0.0064465892684396064 |
+| 7.0     | 4.0     | -8.46719654714102   | 23.26879819764895 | 160.41181895781045 | 228.71123237331744 | 0.6850184339245735 | 0.007432238478854432  |
+| ...     | ...     | ...                 | ...               | ...                | ...                | ...                | ...                   |
+
+### Table of Results
 | Testing Day | Parameter-based Transfer MSE | Instance-based Transfer MSE | IEEE738 MSE | Source Only MSE | Target Only MSE | Source + Target (No Transfer) MSE |
 |-------------|------------------------------|-----------------------------|-------------|-----------------|-----------------|-----------------------------------|
 | 2022-01-28  | 0.72                         | 1.12                        | 1.28        | 1.83            | 0.86            | 2.26                              |
@@ -78,12 +96,15 @@ This code applies [the approaches](#methods) presented above on [artificial data
 | 2022-02-25  | 0.72                         | 1.59                        | 0.85        | 0.55            | 0.83            | 0.74                              |
 | 2022-02-26  | 0.64                         | 2.04                        | 0.58        | 1.56            | 1.04            | 1.36                              |
 
+### Plot of the MSE for each test day , from sensor 7 to sensor 1
+![Results on real data](/results/results_real.png "Results on real data")
 
 ### Plot of the predictions (real values hidden) for one specific day  
 ![Predictions on real data](/results/predictions_for_day_2022-02-06.png "Predictions on real data")
 
 
 ## Results on artificial data
+In this section we present the results that can be obtained by everyone running our code. These are the results of the proposed approaches on the synthetic data [discussed above](#artificial-data). 
 
 | Testing Day | Parameter-based Transfer MSE | Instance-based Transfer MSE | Source Only MSE | Target Only MSE | Source + Target (No Transfer) MSE |
 |-------------|------------------------------|-----------------------------|-----------------|-----------------|-----------------------------------|
