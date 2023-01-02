@@ -11,6 +11,11 @@ The experiments in this repository are carried out on real data collected from 1
 
 > N.B. The dates in this repository are random and do not refer to the corresponding period. 
 
+The input features and the output feature are the follwing: 
+```py
+inputs = ['Wind Speed [m/s]', 'Arranged Wind Dir [°]', 'Air temp [°C]', 'Humidity [%]', 'Sun irradiance thermal flow absorbed by the conductor.[W/m]', 'Current flow [A]']
+output = ['Actual Conductor Temp (t+1) [°C]']
+```
 ### Artificial data
 Since real data cannot be made public, we generate synthetic data using the statistical properties of the real data. The synthetic data is generated using the a normal distribution centered on the real data mean and having the same standard deviation, and **an arbitrary nonlinear relationship between all input features** is adopted as the conductor temperature column. 15 days of data collected with a 1 minute frequency are produced. The synthetic data can be found in the file `artificial_data.csv`.
 
@@ -49,6 +54,7 @@ The same code is executed on real data, and despite the data cannot be shared, w
 3. We [plot the metrics](#plot-of-the-mse-for-each-test-day--from-sensor-7-to-sensor-1) in the previous table for easier interpretation
 4. We [plot the temperature prediction](#plot-of-the-predictions-real-values-hidden-for-one-specific-day) of some methods of interest for the day where transfer learning performs better, for visualization purposes. 
 
+> N.B. for the real data, we set `25` as `target_num_available_days`, instead of the default value `15`. All the remaining parameters are left unchanged.
 
 ## Distance computation and sensors selection
 We report a slice of the distance table that can be found in the corresponding `distance.csv` file. It is clear that the couple (7,1) maximizes in absolute terms the `mean_difference`, the `std_difference`, the `euclidean_distance`, and the `manhattan_distance`, proving to be a valid candidate for attempting Transfer Learning. 
