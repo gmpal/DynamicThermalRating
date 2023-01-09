@@ -330,10 +330,11 @@ class DTR():
 
 
         # TODO: let the user choose the metrics
-        results = pd.DataFrame(columns=['sensor1', 'sensor2', 'mean_difference', 'std_difference', 'euclidean_distance', 'manhattan_distance', 'cosine_similarity', 'area_difference'])
+        # results = pd.DataFrame(columns=['sensor1', 'sensor2', 'mean_difference', 'std_difference', 'euclidean_distance', 'manhattan_distance', 'cosine_similarity', 'area_difference'])
+        results = pd.DataFrame(columns=['sensor1', 'sensor2', 'mean_difference', 'std_difference', 'euclidean_distance', 'manhattan_distance', 'cosine_similarity'])
         
         # Create a list of arguments to pass to the worker function
-        arg_list = [(sensor1, sensor2, df1, df2) for i, (sensor1, df1) in enumerate(self.sensor_data.items()) for j, (sensor2, df2) in enumerate(self.sensor_data.items()) if i < j]
+        arg_list = [(sensor1, sensor2, df1, df2) for i, (sensor1, df1) in enumerate(sensor_data.items()) for j, (sensor2, df2) in enumerate(sensor_data.items()) if i < j]
         with mp.Pool(self.n_jobs) as p:
             statistics_list = p.starmap(self._calculate_statistics, arg_list)
 
@@ -356,30 +357,32 @@ class DTR():
         manhattan_distance = np.sum(np.abs(df1_values - df2_values), axis=1).mean()
         cosine_sim = cosine_similarity(df1_values, df2_values).mean()
 
-        # Calculate the KDEs of the two distributions using a Gaussian kernel
-        area_differences = []
-        for column in df1.columns:
-            kde1 = gaussian_kde(df1[column])
-            kde2 = gaussian_kde(df2[column])
+        # # Calculate the KDEs of the two distributions using a Gaussian kernel
+        # area_differences = []
+        # for column in df1.columns:
+        #     kde1 = gaussian_kde(df1[column])
+        #     kde2 = gaussian_kde(df2[column])
 
-            # Define the domain over which the KDEs will be evaluated
-            # TODO: enlarge the domain
-            x = np.linspace(-5, 5, 100)
+        #     # Define the domain over which the KDEs will be evaluated
+        #     # TODO: enlarge the domain
+        #     x = np.linspace(-5, 5, 100)
 
-            # Calculate the difference between the KDEs
-            y_diff = kde1(x) - kde2(x)
+        #     # Calculate the difference between the KDEs
+        #     y_diff = kde1(x) - kde2(x)
 
-            # Calculate the AUC of the difference between the KDEs
-            auc_diff = np.trapz(y_diff, x)
-            area_differences.append(auc_diff)
+        #     # Calculate the AUC of the difference between the KDEs
+        #     auc_diff = np.trapz(y_diff, x)
+        #     area_differences.append(auc_diff)
         
-        area_difference = np.mean(area_differences)
+        # area_difference = np.mean(area_differences)
 
-        return [sensor1, sensor2, mean_difference, std_difference, euclidean_distance, manhattan_distance, cosine_sim, area_difference]
+        # return [sensor1, sensor2, mean_difference, std_difference, euclidean_distance, manhattan_distance, cosine_sim, area_difference]
+        return [sensor1, sensor2, mean_difference, std_difference, euclidean_distance, manhattan_distance, cosine_sim]
 
     def get_furthest_sensors(self):
         #TODO: think of a better way to calculate the furthest sensors 
-        average_distances = self.distances_df[['mean_difference', 'std_difference', 'euclidean_distance', 'manhattan_distance', 'cosine_similarity', 'area_difference']].mean(axis=1)
+        # average_distances = self.distances_df[['mean_difference', 'std_difference', 'euclidean_distance', 'manhattan_distance', 'cosine_similarity', 'area_difference']].mean(axis=1)
+        average_distances = self.distances_df[['mean_difference', 'std_difference', 'euclidean_distance', 'manhattan_distance', 'cosine_similarity']].mean(axis=1)
         return self.distances_df.loc[average_distances.idxmax()][['sensor1', 'sensor2']]
 
     def get_distances(self):
