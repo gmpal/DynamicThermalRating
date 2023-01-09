@@ -7,7 +7,7 @@ inputs = ['Wind Speed [m/s]', 'Arranged Wind Dir [°]', 'Air temp [°C]', 'Humid
 output = ['Actual Conductor Temp (t+1) [°C]']
 
 
-dtr = DTR(data, inputs, output, n_jobs=30)
+dtr = DTR(data, inputs, output, n_jobs=3)
 
 dtr.compute_sensors_distance()
 

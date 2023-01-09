@@ -320,11 +320,10 @@ class DTR():
     def compute_sensors_distance(self):
 
         data = self.data.copy()
-
         # Create a dictionary of dataframes, one for each sensor and drop the columns that are not needed for the distance calculation
         sensor_data = {}
         for sensor in data.id.unique():
-            sensor_data[sensor] = data.loc[data.id == sensor].drop(columns=['id',
+            sensor_data[sensor] = data.loc[data.id == sensor].drop(columns=['id','datetime',
             'Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C]',
             'Actual Conductor Temp (t+1) [°C]'])
 
@@ -334,7 +333,7 @@ class DTR():
         results = pd.DataFrame(columns=['sensor1', 'sensor2', 'mean_difference', 'std_difference', 'euclidean_distance', 'manhattan_distance', 'cosine_similarity'])
         
         # Create a list of arguments to pass to the worker function
-        arg_list = [(sensor1, sensor2, df1, df2) for i, (sensor1, df1) in enumerate(sensor_data.items()) for j, (sensor2, df2) in enumerate(sensor_data.items()) if i < j]
+        arg_list = [(sensor1, sensor2, df1, df2) for i, (sensor1, df1) in enumerate(sensor_data.items()) for j, (sensor2, df2) in enumerate(sensor_data.items())]
         with mp.Pool(self.n_jobs) as p:
             statistics_list = p.starmap(self._calculate_statistics, arg_list)
 
@@ -345,7 +344,7 @@ class DTR():
         self.distances_df = results
 
 
-    def _calculate_statistics(sensor1, sensor2, df1, df2):
+    def _calculate_statistics(self, sensor1, sensor2, df1, df2):
     
         mean_difference = (df1 - df2).values.mean()
         std_difference = (df1 - df2).values.std()
