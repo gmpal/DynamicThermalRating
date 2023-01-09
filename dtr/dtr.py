@@ -71,7 +71,7 @@ class DTR():
 
     def _test(method, self, metric, ieee, target, testing_days, regressor_source, regressor_mix, regressor_target, regressor_transfer, verbose, store_predictions):
 
-        results = pd.DataFrame(columns=['Testing Day', 'Transfer MSE', 'IEEE MSE', 'Source Only MSE', 'Target Only MSE', 'Source + Target (No Transfer) MSE'])
+        results = pd.DataFrame(columns=['Testing Day', 'Transfer MSE', 'IEEE 738 MSE', 'Source Only MSE', 'Target Only MSE', 'Source + Target (No Transfer) MSE'])
 
         self.predictions['Index'] = target.loc[target['datetime'].dt.date.isin(testing_days)].index
 
@@ -80,7 +80,7 @@ class DTR():
         self.predictions['Target Only'] = {}
         self.predictions['Source + Target (No Transfer)'] = {}
         self.predictions['Real Temperature'] = {}
-        if ieee: self.predictions['IEEE'] = {}
+        if ieee: self.predictions['IEEE 738'] = {}
 
         for day in testing_days:
             
@@ -114,14 +114,14 @@ class DTR():
             if ieee: 
                 y_IEEE_738 = target_test['Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C]']
                 if store_predictions: 
-                    self.predictions['IEEE'][day] = y_IEEE_738.reset_index(drop=True)
+                    self.predictions['IEEE 738'][day] = y_IEEE_738.reset_index(drop=True)
                 results.loc[len(results)] = [day, metric(y_test, y_hat_transfer),  metric(y_test, y_IEEE_738), metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
             else:
                 results.loc[len(results)] = [day, metric(y_test, y_hat_transfer),  None, metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
         if ieee:
             return results
         else:
-            return results.drop(columns=['IEEE738 MSE'])
+            return results.drop(columns=['IEEE 738 MSE'])
 
     def _both_transfers(self, regressor, metric, estimators_tradaboost, verbose, ieee, epochs, batch_size, target, testing_days, Xs, ys, available_days, store_predictions):
 
@@ -145,7 +145,7 @@ class DTR():
         regressor_mix.fit(pd.concat([X_t_available,Xs]), pd.concat([y_t_available, ys]), epochs=epochs, verbose=verbose, batch_size=batch_size)
 
         #TODO: refactor
-        results = pd.DataFrame(columns=['Testing Day', 'Parameter-based Transfer MSE', 'Instance-based Transfer MSE', 'IEEE738 MSE', 'Source Only MSE', 'Target Only MSE', 'Source + Target (No Transfer) MSE'])
+        results = pd.DataFrame(columns=['Testing Day', 'Parameter-based Transfer MSE', 'Instance-based Transfer MSE', 'IEEE 738 MSE', 'Source Only MSE', 'Target Only MSE', 'Source + Target (No Transfer) MSE'])
         
         self.predictions['Transfer Parameter-based'] = {}
         self.predictions['Transfer Instance-based'] = {}
@@ -153,7 +153,7 @@ class DTR():
         self.predictions['Target Only'] = {}
         self.predictions['Source + Target (No Transfer)'] = {}
         self.predictions['Real Temperature'] = {}
-        if ieee: self.predictions['IEEE'] = {}
+        if ieee: self.predictions['IEEE 738'] = {}
 
         for day in testing_days:
             # Extract test data for the current day
@@ -177,7 +177,7 @@ class DTR():
                 self.predictions['Real Temperature'][day] = y_test.reset_index(drop=True)
             if ieee: 
                 y_IEEE_738 = target_test['Conductor Temp. estimated by dyn_IEEE_738 (t+1) [°C]']
-                if store_predictions: self.predictions['IEEE'][day] = y_IEEE_738.reset_index(drop=True)
+                if store_predictions: self.predictions['IEEE 738'][day] = y_IEEE_738.reset_index(drop=True)
                 results.loc[len(results)] = [day, metric(y_test, y_hat_transfer_p), metric(y_test, y_hat_transfer_i),  metric(y_test, y_IEEE_738), metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
             else:
                 results.loc[len(results)] = [day, metric(y_test, y_hat_transfer_p), metric(y_test, y_hat_transfer_i),  None, metric(y_test, y_hat_source), metric(y_test, y_hat_target), metric(y_test, y_hat_mix)]
@@ -185,7 +185,7 @@ class DTR():
         if ieee:
             return results
         else:
-            return results.drop(columns=['IEEE738 MSE'])
+            return results.drop(columns=['IEEE 738 MSE'])
 
 
     def _p_transfer(self, regressor, metric, verbose, epochs, batch_size, ieee, target, testing_days, Xs, ys, available_days, store_predictions):
@@ -407,7 +407,7 @@ class DTR():
         df = self.results.copy()
 
         # Find the name of the best approach for each row
-        df['Best Approach'] = df[['Parameter-based Transfer MSE', 'Instance-based Transfer MSE', 'IEEE738 MSE', 'Source Only MSE', 'Target Only MSE', 'Source + Target (No Transfer) MSE']].idxmin(axis=1)
+        df['Best Approach'] = df[['Parameter-based Transfer MSE', 'Instance-based Transfer MSE', 'IEEE 738 MSE', 'Source Only MSE', 'Target Only MSE', 'Source + Target (No Transfer) MSE']].idxmin(axis=1)
 
         df['Best Approach'] = df['Best Approach'].str.replace(' MSE', '')
 
@@ -424,7 +424,7 @@ class DTR():
         df = self.results.copy()
 
         # Get the MSE values for each row as a separate Series
-        mse_values = df[['Parameter-based Transfer MSE', 'Instance-based Transfer MSE', 'IEEE738 MSE', 'Source Only MSE', 'Target Only MSE', 'Source + Target (No Transfer) MSE']]
+        mse_values = df[['Parameter-based Transfer MSE', 'Instance-based Transfer MSE', 'IEEE 738 MSE', 'Source Only MSE', 'Target Only MSE', 'Source + Target (No Transfer) MSE']]
 
         # Get the names of the approaches as a list
         approach_names = mse_values.columns.tolist()
