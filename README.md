@@ -208,6 +208,36 @@ dtr.transfer(source_sensor_id = 7,
 | estimators_tradaboost     |    20   | Number of estimators to use in the TrAdaBoost.R2 instance-based approach                                    |
 | store_predictions         |   True  | Whether to keep the predictions made by the model                                                           |
 
+# Complete results on real data
+
+## With 15 days available for transfer 
+### Merged
+![Merged Results with 15 days available for transfer](/results/15days/all.png "Merged Results with 15 days available for transfer")
+
+### Furthest (above third quartile of the Euclidean Distance)
+![Furthest Results with 15 days available for transfer](/results/15days/furthest.png "Furthest Results with 15 days available for transfer")
+
+### In Between (between first and third quartiles of the Euclidean Distance)
+![Between Results with 15 days available for transfer](/results/15days/between.png "Between Results with 15 days available for transfer")
+
+### Closest (below first quartile of the Euclidean Distance)
+![Closest Results with 15 days available for transfer](/results/15days/closest.png "Closest Results with 15 days available for transfer")
+ 
+
+## With 25 days available for transfer 
+### Merged
+![Merged Results with 25 days available for transfer](/results/25days/all.png "Merged Results with 25 days available for transfer")
+
+### Furthest (above third quartile of the Euclidean Distance)
+![Furthest Results with 25 days available for transfer](/results/25days/furthest.png "Furthest Results with 25 days available for transfer")
+
+### In Between (between first and third quartiles of the Euclidean Distance)
+![Between Results with 25 days available for transfer](/results/25days/between.png "Between Results with 25 days available for transfer")
+
+### Closest (below first quartile of the Euclidean Distance)
+![Closest Results with 25 days available for transfer](/results/25days/closest.png "Closest Results with 25 days available for transfer")
+ 
+
 # Acknowledgements
 
 We thank the authors of the ADAPT Python library for their great effort in making Transfer Learning more accessible. Here is the [paper](https://arxiv.org/pdf/2107.03049.pdf) and here is the [github](https://github.com/adapt-python/adapt).
