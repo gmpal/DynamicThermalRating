@@ -4,6 +4,9 @@ import multiprocessing as mp
 from scipy.stats import gaussian_kde
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import GridSearchCV
+
+
 
 import tensorflow as tf
 
@@ -243,19 +246,37 @@ class DTR():
             raise ValueError("method must be either 'parameter_based_transfer' or 'instance_based_transfer', or 'both'")
         return results
 
+    def _tune_parameters(self, regressor, verbose, target, available_days):
+        
+        #TODO: at the moment, tune once with target available data only. Might consider tuning source and target separately.
+        #TODO: also no Random Forest tuning yet
 
-    def transfer(self, source_sensor_id, target_sensor_id, target_num_available_days = 5, target_num_test_days=30, regressor=None, sliding_window = False, metric = mean_squared_error, verbose = 1, epochs = 15,  batch_size = 32, ieee=False, method = 'parameter_based_transfer', estimators_tradaboost = 20, store_predictions=False):        
+        target_available = target.loc[target['datetime'].dt.date.between(available_days[0], available_days[-1])]
+        X_t_available = target_available[self.inputs]
+        y_t_available = target_available[self.output]
+        
+        parameters = {'epochs': [10, 15, 20, 25, 30], 'batch_size': [16, 32, 64, 128, 256]}
+        regressor = GridSearchCV(tf.keras.wrappers.scikit_learn.KerasRegressor(regressor), parameters, cv=2, scoring='neg_mean_squared_error', n_jobs=self.n_jobs, verbose=verbose)
+        regressor.fit(X_t_available, y_t_available)
+        batch_size = regressor.best_params_['batch_size']
+        epochs = regressor.best_params_['epochs']
+        return batch_size, epochs 
+
+    def transfer(self, source_sensor_id, target_sensor_id, target_num_available_days = 5, target_num_test_days=30, regressor=None, sliding_window = False, metric = mean_squared_error, verbose = 1, epochs = 15,  batch_size = 32, ieee=False, method = 'parameter_based_transfer', estimators_tradaboost = 20, store_predictions=False, tune_parameters=False):        
         target, testing_days, Xs, ys, dates = self._prepare_data(source_sensor_id, target_sensor_id, target_num_available_days, target_num_test_days)
+        
         if sliding_window:
             sliding_window_results = []
             for i in range(len(dates) - target_num_test_days - target_num_available_days + 1): # Loop through the dates, extracting available data in a sliding window fashion
                 available_days = dates[i:i+target_num_available_days] # Extract available data for the target sensor
+                if tune_parameters: batch_size, epochs = self._tune_parameters(regressor, verbose, target, available_days)
                 results = self._perform_transfer(regressor, metric, verbose, epochs, batch_size, ieee, method, estimators_tradaboost, target, testing_days, Xs, ys, available_days, store_predictions)
                 sliding_window_results.append(results)
             self.results = pd.concat(sliding_window_results).groupby('Testing Day').mean() # Return the average of the results
         else:
             start = np.random.randint(0, len(dates) - target_num_test_days - target_num_available_days + 1) #select randomly one of the possible windows of available data of size target_num_available_days
             available_days = dates[start:start+target_num_available_days] # Extract available data for the target sensor
+            if tune_parameters: batch_size, epochs  = self._tune_parameters(regressor, verbose, target, available_days)
             results = self._perform_transfer(regressor, metric, verbose, epochs, batch_size, ieee, method, estimators_tradaboost, target, testing_days, Xs, ys, available_days, store_predictions)
             self.results = results
 
