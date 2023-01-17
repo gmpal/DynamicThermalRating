@@ -215,7 +215,7 @@ dtr.transfer(source_sensor_id = 7,
 ![Merged Results with 15 days available for transfer](/results/15days/all.png "Merged Results with 15 days available for transfer")
 
 ### Furthest (above third quartile of the Euclidean Distance)
-![Furthest Results with 15 days available for transfer](/results/15days/furthest.png "Furthest Results with 15 days available for transfer")
+![Furthest Results with 15 days available for transfer](/results/15days/futhest.png "Furthest Results with 15 days available for transfer")
 
 ### In Between (between first and third quartiles of the Euclidean Distance)
 ![Between Results with 15 days available for transfer](/results/15days/between.png "Between Results with 15 days available for transfer")
@@ -229,7 +229,7 @@ dtr.transfer(source_sensor_id = 7,
 ![Merged Results with 25 days available for transfer](/results/25days/all.png "Merged Results with 25 days available for transfer")
 
 ### Furthest (above third quartile of the Euclidean Distance)
-![Furthest Results with 25 days available for transfer](/results/25days/furthest.png "Furthest Results with 25 days available for transfer")
+![Furthest Results with 25 days available for transfer](/results/25days/futhest.png "Furthest Results with 25 days available for transfer")
 
 ### In Between (between first and third quartiles of the Euclidean Distance)
 ![Between Results with 25 days available for transfer](/results/25days/between.png "Between Results with 25 days available for transfer")
